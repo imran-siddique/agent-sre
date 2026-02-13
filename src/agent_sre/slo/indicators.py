@@ -243,6 +243,44 @@ class DelegationChainDepth(SLI):
         return self.record(0.0)
 
 
+class HallucinationRate(SLI):
+    """Measures hallucination rate via LLM-as-judge evaluation.
+
+    Records evaluation results from an external judge (LLM or human)
+    that scores agent outputs for factual accuracy. Lower is better.
+    """
+
+    def __init__(self, target: float = 0.05, window: TimeWindow | str = "24h") -> None:
+        super().__init__("hallucination_rate", target, window)
+        self._total = 0
+        self._hallucinated = 0
+
+    def record_evaluation(
+        self,
+        hallucinated: bool,
+        confidence: float = 1.0,
+        metadata: dict[str, Any] | None = None,
+    ) -> SLIValue:
+        """Record an evaluation result from the judge."""
+        self._total += 1
+        if hallucinated:
+            self._hallucinated += 1
+        rate = self._hallucinated / self._total if self._total > 0 else 0.0
+        return self.record(rate, {"confidence": confidence, **(metadata or {})})
+
+    def compliance(self) -> float | None:
+        """Fraction of measurements at or below the target (lower is better)."""
+        values = self.values_in_window()
+        if not values:
+            return None
+        good = sum(1 for v in values if v.value <= self.target)
+        return good / len(values)
+
+    def collect(self) -> SLIValue:
+        rate = self._hallucinated / self._total if self._total > 0 else 0.0
+        return self.record(rate)
+
+
 # --- Registry ---
 
 
@@ -260,6 +298,7 @@ class SLIRegistry:
             CostPerTask,
             PolicyCompliance,
             DelegationChainDepth,
+            HallucinationRate,
         ):
             self.register_type(cls)
 
