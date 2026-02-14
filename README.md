@@ -8,6 +8,40 @@
 
 ---
 
+## Quickstart
+
+```bash
+pip install agent-sre
+```
+
+```python
+from agent_sre import SLO, ErrorBudget
+from agent_sre.slo.indicators import TaskSuccessRate, CostPerTask, HallucinationRate
+
+slo = SLO(
+    name="my-agent",
+    indicators=[
+        TaskSuccessRate(target=0.95, window="24h"),
+        CostPerTask(target_usd=0.50, window="24h"),
+        HallucinationRate(target=0.05, window="24h"),
+    ],
+    error_budget=ErrorBudget(total=0.05),
+)
+
+# After each agent task
+slo.indicators[0].record_task(success=True)
+slo.indicators[1].record_cost(cost_usd=0.35)
+slo.indicators[2].record_evaluation(hallucinated=False)
+slo.record_event(good=True)
+
+# Check health
+status = slo.evaluate()  # HEALTHY, WARNING, CRITICAL, or EXHAUSTED
+```
+
+See [examples/](examples/) for complete runnable demos: SLO monitoring, cost guardrails, canary deployments, chaos testing.
+
+---
+
 ## The Problem
 
 AI agents in production fail differently than traditional services:
@@ -71,22 +105,31 @@ Traditional SRE defines SLOs for services (99.9% uptime). Agent SRE defines SLOs
 
 ```python
 from agent_sre import SLO, ErrorBudget
+from agent_sre.slo.indicators import TaskSuccessRate, CostPerTask, HallucinationRate
 
-# Define an SLO for your agent
 slo = SLO(
     name="customer-support-agent",
     indicators=[
-        SLI.task_success_rate(target=0.995, window="30d"),
-        SLI.tool_accuracy(target=0.999, window="7d"),
-        SLI.p95_latency(target_ms=5000, window="1h"),
-        SLI.cost_per_task(target_usd=0.50, window="24h"),
+        TaskSuccessRate(target=0.995, window="30d"),
+        CostPerTask(target_usd=0.50, window="24h"),
+        HallucinationRate(target=0.05, window="24h"),
     ],
     error_budget=ErrorBudget(
+        total=0.005,
         burn_rate_alert=2.0,      # Alert at 2x normal burn
         burn_rate_critical=10.0,  # Page at 10x burn
-        exhaustion_action="freeze_deployments",
     )
 )
+
+# Record agent outcomes
+slo.indicators[0].record_task(success=True)
+slo.indicators[1].record_cost(cost_usd=0.35)
+slo.indicators[2].record_evaluation(hallucinated=False)
+slo.record_event(good=True)
+
+# Check SLO health
+status = slo.evaluate()  # HEALTHY, WARNING, CRITICAL, or EXHAUSTED
+print(f"Budget remaining: {slo.error_budget.remaining_percent:.1f}%")
 ```
 
 ### 2. Deterministic Replay — Time-Travel Debugging for Agents
@@ -94,18 +137,22 @@ slo = SLO(
 Capture every decision point in an agent's execution and replay it exactly:
 
 ```python
-from agent_sre import ReplayEngine
+from agent_sre.replay.capture import TraceCapture, SpanKind, TraceStore
 
-# Capture mode: records all inputs, tool calls, LLM responses
-with ReplayEngine.capture(agent_id="support-bot-v3") as recorder:
-    result = agent.run("Refund order #12345")
-    # Captures: prompt, tool calls, API responses, timestamps, costs
+# Capture mode: records all decisions, tool calls, costs
+with TraceCapture(agent_id="support-bot-v3", task_input="Refund order #12345") as capture:
+    span = capture.start_span("tool_call", SpanKind.TOOL_CALL,
+                              input_data={"tool": "lookup_order", "order_id": "12345"})
+    # ... agent calls tool ...
+    span.finish(output={"status": "found", "amount": 49.99}, cost_usd=0.02)
 
-# Later: replay the exact execution
-replay = ReplayEngine.load(trace_id="abc-123")
-replay.step_through()  # Interactive step-by-step
-replay.diff(other_trace_id="def-456")  # Compare two executions
-replay.what_if(tool_responses={"lookup_order": modified_response})  # Counterfactual
+    span = capture.start_span("llm_inference", SpanKind.LLM_INFERENCE,
+                              input_data={"prompt": "Process refund for $49.99"})
+    span.finish(output={"decision": "approve_refund"}, cost_usd=0.15)
+
+# Save trace for later replay
+store = TraceStore()
+store.save(capture.trace)
 ```
 
 ### 3. Progressive Delivery — Ship Agent Changes Safely
@@ -146,33 +193,41 @@ spec:
 ### 4. Chaos Engineering — Break Agents on Purpose
 
 ```python
-from agent_sre.chaos import ChaosEngine, Fault
+from agent_sre.chaos.engine import ChaosExperiment, Fault, AbortCondition
 
-chaos = ChaosEngine(mesh_connection="agent-mesh://cluster-1")
-
-# Inject faults into the agent mesh
-experiment = chaos.create_experiment(
+experiment = ChaosExperiment(
     name="tool-failure-resilience",
     target_agent="research-agent",
     faults=[
-        Fault.tool_timeout("web_search", delay_ms=30000),
+        Fault.tool_timeout("web_search", delay_ms=30_000),
         Fault.tool_error("database_query", error="connection_refused", rate=0.5),
-        Fault.llm_latency(provider="openai", p99_ms=15000),
-        Fault.delegation_reject(from_agent="analyzer", rate=0.1),
+        Fault.llm_latency("openai", p99_ms=15_000),
+        Fault.delegation_reject("analyzer", rate=0.1),
     ],
-    duration="30m",
+    duration_seconds=1800,
     abort_conditions=[
-        "task_success_rate < 0.80",   # Stop if quality drops too far
-        "cost_per_task > 5.00",       # Stop if cost explodes
+        AbortCondition(metric="task_success_rate", threshold=0.80, comparator="lte"),
+        AbortCondition(metric="cost_per_task", threshold=5.00, comparator="gte"),
     ],
 )
-experiment.run()
+
+experiment.start()
+# Inject faults, observe agent behavior, measure resilience
+for fault in experiment.faults:
+    experiment.inject_fault(fault, applied=True)
+
+resilience = experiment.calculate_resilience(
+    baseline_success_rate=0.98,
+    experiment_success_rate=0.88,
+    recovery_time_ms=2500,
+)
+print(f"Resilience Score: {resilience.overall:.0f}/100")
 ```
 
 ### 5. Cost Guard — Prevent $10K Surprises
 
 ```python
-from agent_sre import CostGuard
+from agent_sre.cost.guard import CostGuard
 
 guard = CostGuard(
     per_task_limit=2.00,          # Hard cap per task
@@ -182,29 +237,39 @@ guard = CostGuard(
     auto_throttle=True,           # Slow down agents approaching limits
     kill_switch_threshold=0.95,   # Kill at 95% budget
 )
+
+# Before each task
+allowed, reason = guard.check_task("my-agent", estimated_cost=0.50)
+if not allowed:
+    print(f"Blocked: {reason}")
+
+# After each task
+alerts = guard.record_cost("my-agent", "task-42", cost_usd=0.35)
+for alert in alerts:
+    print(f"⚠️ {alert.severity.value}: {alert.message}")
 ```
 
 ### 6. Incident Manager — When Agents Fail in Production
 
 ```python
-from agent_sre import IncidentManager
+from agent_sre.incidents.detector import IncidentDetector, Signal, SignalType
 
-incidents = IncidentManager(
-    detection=[
-        "slo_breach",              # SLO violation detected
-        "error_budget_exhausted",  # Error budget at 0
-        "cost_anomaly",            # Unusual spending pattern
-        "policy_violation",        # Agent OS policy breach
-        "trust_revocation",        # Agent Mesh trust broken
-    ],
-    response=[
-        "auto_rollback",           # Revert to last known good
-        "circuit_breaker",         # Stop affected agent
-        "generate_postmortem",     # Auto-generate incident report
-        "replay_failing_traces",   # Capture traces for debugging
-    ],
-    notification=["slack", "pagerduty", "email"],
+detector = IncidentDetector(correlation_window_seconds=300)
+
+# Register automated responses
+detector.register_response("slo_breach", ["auto_rollback", "notify_oncall"])
+detector.register_response("cost_anomaly", ["throttle_agent", "generate_postmortem"])
+
+# Ingest signals from your monitoring
+signal = Signal(
+    signal_type=SignalType.ERROR_BUDGET_EXHAUSTED,
+    source="support-agent",
+    message="Error budget consumed — freeze deployments",
 )
+
+incident = detector.ingest_signal(signal)
+if incident:
+    print(f"🚨 {incident.severity.value}: {incident.title}")
 ```
 
 ## The Full Stack
@@ -265,15 +330,20 @@ agent-sre/
 
 See [Issues](https://github.com/imran-siddique/agent-sre/issues) for the full backlog, organized by priority.
 
-## Positioning: Agent SRE vs. SRE Agents
+## Why Not Just Use X?
 
-| | Agent SRE (this project) | Azure SRE Agent / Others |
-|---|---|---|
-| **Purpose** | Make AI agents reliable | Use AI agents for infra ops |
-| **Target** | Agent developers & platform teams | DevOps / SRE teams |
-| **Monitors** | Agent reasoning, tool use, costs | Servers, VMs, K8s |
-| **SLOs for** | Task success, accuracy, hallucination | Uptime, latency, error rate |
-| **Chaos tests** | Tool failures, LLM latency, trust revocation | Network partition, pod kill |
+**LangSmith / Arize / Langfuse** — Great for tracing and evaluation. But they don't give you SLOs, error budgets, canary deployments, chaos testing, or cost guardrails. Use them *together* with Agent-SRE: they tell you what happened, we tell you if it's within budget.
+
+**Datadog / New Relic / Prometheus** — Monitor infrastructure. Your dashboard says "HTTP 200, latency 150ms, all green" while your agent just approved a fraudulent transaction. Agent-SRE catches reasoning failures, not infrastructure failures.
+
+**Cleric / Resolve / SRE.ai** — These use AI to help humans debug infrastructure. We apply SRE principles *to* AI agent systems. Completely different problem.
+
+## Documentation
+
+- [Getting Started](docs/getting-started.md) — Install and define your first SLO in 5 minutes
+- [Concepts](docs/concepts.md) — Why agent reliability is different from infrastructure reliability
+- [Integration Guide](docs/integration-guide.md) — Use with Agent-OS and AgentMesh
+- [Comparison](docs/comparison.md) — Detailed comparison with other tools
 
 ## License
 
