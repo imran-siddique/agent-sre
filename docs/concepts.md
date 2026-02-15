@@ -14,7 +14,7 @@ AI agents fail differently:
 | Retry usually works | Retry might give same wrong answer |
 | Infrastructure problem | Reasoning problem |
 
-Your Datadog dashboard says "everything is green" while your agent approves a fraudulent transaction.
+Your APM dashboard says "everything is green" while your agent approves a fraudulent transaction.
 
 ## Agent-Specific SLIs
 

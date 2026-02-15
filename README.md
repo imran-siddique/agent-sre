@@ -300,7 +300,7 @@ Together they form the **operating environment for production AI agents** — li
 ### With OpenTelemetry
 - Native OTLP export for all SLIs and traces
 - Custom semantic conventions for agent-specific telemetry
-- Compatible with Grafana, Datadog, New Relic, Jaeger
+- Compatible with Grafana, Prometheus, Jaeger, and other OTLP-compatible backends
 
 ## Project Structure
 
@@ -334,7 +334,7 @@ See [Issues](https://github.com/imran-siddique/agent-sre/issues) for the full ba
 
 **LangSmith / Arize / Langfuse** — Great for tracing and evaluation. But they don't give you SLOs, error budgets, canary deployments, chaos testing, or cost guardrails. Use them *together* with Agent-SRE: they tell you what happened, we tell you if it's within budget.
 
-**Datadog / New Relic / Prometheus** — Monitor infrastructure. Your dashboard says "HTTP 200, latency 150ms, all green" while your agent just approved a fraudulent transaction. Agent-SRE catches reasoning failures, not infrastructure failures.
+**Traditional APM (Prometheus, Grafana, Jaeger)** — Monitor infrastructure. Your dashboard says "HTTP 200, latency 150ms, all green" while your agent just approved a fraudulent transaction. Agent-SRE catches reasoning failures, not infrastructure failures.
 
 **Cleric / Resolve / SRE.ai** — These use AI to help humans debug infrastructure. We apply SRE principles *to* AI agent systems. Completely different problem.
 

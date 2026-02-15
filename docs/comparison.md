@@ -18,7 +18,7 @@ Agent-SRE tells you **if it's within budget** and **what to do about it**.
 
 **Use both together:** LangSmith for deep trace debugging. Agent-SRE for production reliability operations.
 
-## vs Azure SRE Agent / Cleric / Resolve (AI-Powered SRE)
+## vs Cleric / Resolve / SRE.ai (AI-Powered SRE)
 
 These tools use AI to **help humans do infrastructure SRE** — incident investigation, triage, root cause analysis for servers and services.
 
@@ -32,9 +32,9 @@ Agent-SRE applies SRE principles **to AI agent systems** — completely differen
 | **Chaos tests** | Network partition, pod crash | Tool timeout, LLM degradation |
 | **Incidents about** | "Pod crashed" | "Agent made wrong decision" |
 
-**Not competitive.** Azure SRE Agent monitors your infrastructure. Agent-SRE monitors the agents running on that infrastructure.
+**Not competitive.** AI-powered SRE tools monitor your infrastructure. Agent-SRE monitors the agents running on that infrastructure.
 
-## vs Datadog / New Relic / Prometheus (Traditional APM)
+## vs Traditional APM (Prometheus, Grafana, Jaeger)
 
 Traditional APM says "HTTP 200, latency 150ms, everything looks green."
 

@@ -66,4 +66,4 @@ from agent_sre.integrations.otel import OTelExporter
 exporter = OTelExporter(endpoint="http://localhost:4317")
 ```
 
-This means agent-level traces appear in the same Grafana/Jaeger/Datadog dashboards as your infrastructure traces — but with agent-specific attributes like `agent.trust_score`, `agent.decision`, and `agent.policy_result`.
+This means agent-level traces appear in the same Grafana/Jaeger dashboards as your infrastructure traces — but with agent-specific attributes like `agent.trust_score`, `agent.decision`, and `agent.policy_result`.
