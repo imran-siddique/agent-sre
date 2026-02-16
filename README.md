@@ -381,7 +381,7 @@ Agent SRE tells you *if it was within budget* and *what to do about it*.
 
 ## Status & Maturity
 
-### ✅ Fully Implemented (10,000+ lines, 491 tests)
+### ✅ Fully Implemented (15,000+ lines, 730 tests)
 
 | Component | Status | Description |
 |---|---|---|
@@ -402,6 +402,15 @@ Agent SRE tells you *if it was within budget* and *what to do about it*.
 | **Webhook Alerting** | ✅ Stable | Slack, PagerDuty, generic webhook formatters |
 | **SLO Templates** | ✅ Stable | 4 domain-specific templates (support, coding, research, pipeline) |
 | **Integration Tests** | ✅ Stable | Cross-module tests covering all subsystems |
+| **Protocol Tracing** | ✅ Stable | A2A/MCP-aware distributed tracing with W3C context propagation |
+| **REST API** | ✅ Stable | Zero-dependency HTTP API for SLO status, incidents, cost, traces |
+| **Fleet Management** | ✅ Stable | Multi-agent registry, heartbeats, aggregate health, filtering |
+| **K8s Operator** | ✅ Stable | AgentRollout CRD, reconciler, status conditions |
+| **Helm Chart** | ✅ Stable | Deployment, Service, CRD templates with configurable values |
+| **Benchmark Suite** | ✅ Stable | 10 scenarios across 6 categories with scoring and reporting |
+| **Certification** | ✅ Stable | Bronze/Silver/Gold reliability tiers with evidence-based evaluation |
+| **Framework Adapters** | ✅ Stable | LangGraph, CrewAI, AutoGen, OpenAI Agents SDK adapters |
+| **A/B Testing** | ✅ Stable | Experiment engine with Welch's t-test and traffic splitting |
 
 ---
 
@@ -420,6 +429,13 @@ Agent SRE tells you *if it was within budget* and *what to do about it*.
 ```bash
 docker compose up quickstart          # Quick demo
 docker compose up langchain-monitor   # LangChain + SLOs + LLM-as-Judge
+docker compose up api                 # REST API on port 8080
+```
+
+**Kubernetes:**
+
+```bash
+helm install agent-sre ./deployments/helm/agent-sre
 ```
 
 ---
