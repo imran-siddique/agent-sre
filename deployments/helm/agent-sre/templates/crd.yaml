@@ -1,0 +1,138 @@
+{{- if .Values.crd.install }}
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: agentrollouts.agent-sre.io
+  labels:
+    {{- include "agent-sre.labels" . | nindent 4 }}
+spec:
+  group: agent-sre.io
+  names:
+    kind: AgentRollout
+    plural: agentrollouts
+    singular: agentrollout
+    shortNames:
+      - aroll
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - candidate
+              properties:
+                description:
+                  type: string
+                strategy:
+                  type: string
+                  enum: [canary, shadow, blue_green]
+                  default: canary
+                current:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    version:
+                      type: string
+                    image:
+                      type: string
+                    model:
+                      type: string
+                candidate:
+                  type: object
+                  required: [name, version]
+                  properties:
+                    name:
+                      type: string
+                    version:
+                      type: string
+                    image:
+                      type: string
+                    model:
+                      type: string
+                steps:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      weight:
+                        type: number
+                        minimum: 0
+                        maximum: 1
+                      durationSeconds:
+                        type: integer
+                        minimum: 0
+                      manualGate:
+                        type: boolean
+                        default: false
+                rollbackConditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      metric:
+                        type: string
+                      threshold:
+                        type: number
+                      operator:
+                        type: string
+                        enum: [gte, lte, gt, lt]
+                sloRequirements:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      target:
+                        type: number
+                      indicator:
+                        type: string
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                currentStep:
+                  type: integer
+                currentWeight:
+                  type: number
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Strategy
+          type: string
+          jsonPath: .spec.strategy
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Weight
+          type: number
+          jsonPath: .status.currentWeight
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+{{- end }}

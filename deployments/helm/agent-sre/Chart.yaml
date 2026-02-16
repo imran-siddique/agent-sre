@@ -1,0 +1,18 @@
+apiVersion: v2
+name: agent-sre
+description: Reliability Engineering for AI Agent Systems
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - ai
+  - agents
+  - sre
+  - reliability
+  - observability
+  - slo
+home: https://github.com/imran-siddique/agent-sre
+sources:
+  - https://github.com/imran-siddique/agent-sre
+maintainers:
+  - name: Imran Siddique

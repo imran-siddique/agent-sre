@@ -1,0 +1,52 @@
+# Agent-SRE Helm chart values
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/imran-siddique/agent-sre
+  tag: ""  # Defaults to appVersion
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+api:
+  enabled: true
+  port: 8080
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# SLO configuration
+slo:
+  enabled: true
+  # SLO templates to load on startup
+  templates: []
+  #   - coding-agent
+  #   - customer-support-agent
+
+# OpenTelemetry configuration
+otel:
+  enabled: false
+  endpoint: ""  # e.g., http://otel-collector:4317
+  serviceName: agent-sre
+
+# Fleet management
+fleet:
+  enabled: true
+  heartbeatTimeoutSeconds: 300
+  successRateThreshold: 0.9
+
+# CRD installation
+crd:
+  install: true
