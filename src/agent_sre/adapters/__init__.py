@@ -9,6 +9,7 @@ Adapters:
 - CrewAIAdapter: Instrument CrewAI crew runs
 - AutoGenAdapter: Instrument AutoGen agent conversations
 - OpenAIAgentsAdapter: Instrument OpenAI Agents SDK runs
+- SemanticKernelAdapter: Instrument Microsoft Semantic Kernel
 
 All adapters are duck-typed — no framework imports required.
 """
@@ -359,4 +360,64 @@ class OpenAIAgentsAdapter(BaseAdapter):
             else 1.0
         )
         snapshot["total_handoffs"] = len(self._handoffs)
+        return snapshot
+
+
+class SemanticKernelAdapter(BaseAdapter):
+    """
+    Adapter for Microsoft Semantic Kernel.
+
+    Usage:
+        adapter = SemanticKernelAdapter()
+        adapter.on_kernel_start(kernel_name="my_kernel")
+        adapter.on_plugin_call("search_plugin", "search", error="")
+        adapter.on_function_result("search_plugin", "search", success=True, cost_usd=0.01)
+        adapter.on_plan_step("step_1")
+        adapter.on_llm_call(input_tokens=100, output_tokens=50, cost_usd=0.005)
+        adapter.on_kernel_end(success=True)
+    """
+
+    def __init__(self) -> None:
+        super().__init__("semantic_kernel")
+        self._plugin_calls: List[Dict[str, Any]] = []
+
+    def on_kernel_start(self, kernel_name: str = "", **kwargs: Any) -> TaskRecord:
+        self._plugin_calls.clear()
+        return self._start_task({"kernel_name": kernel_name, **kwargs})
+
+    def on_plugin_call(self, plugin_name: str, function_name: str = "", error: str = "") -> None:
+        if self._current:
+            self._current.tool_calls += 1
+            if error:
+                self._current.tool_errors += 1
+            self._plugin_calls.append({
+                "plugin": plugin_name,
+                "function": function_name,
+                "error": error,
+            })
+
+    def on_function_result(self, plugin_name: str, function_name: str = "",
+                           success: bool = True, cost_usd: float = 0.0) -> None:
+        if self._current:
+            self._current.cost_usd += cost_usd
+            if not success:
+                self._current.tool_errors += 1
+
+    def on_plan_step(self, step_name: str) -> None:
+        if self._current:
+            self._current.steps += 1
+
+    def on_llm_call(self, input_tokens: int = 0, output_tokens: int = 0,
+                    cost_usd: float = 0.0) -> None:
+        if self._current:
+            self._current.input_tokens += input_tokens
+            self._current.output_tokens += output_tokens
+            self._current.cost_usd += cost_usd
+
+    def on_kernel_end(self, success: bool = True, error: str = "") -> TaskRecord:
+        return self._finish_task(success=success, error=error)
+
+    def get_sli_snapshot(self) -> Dict[str, Any]:
+        snapshot = super().get_sli_snapshot()
+        snapshot["total_plugin_calls"] = len(self._plugin_calls)
         return snapshot

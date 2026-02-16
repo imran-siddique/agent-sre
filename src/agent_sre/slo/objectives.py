@@ -7,6 +7,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
+from agent_sre.alerts import Alert, AlertManager, AlertSeverity
+
 if TYPE_CHECKING:
     from agent_sre.slo.indicators import SLI
 
@@ -150,11 +152,16 @@ class SLO:
         error_budget: ErrorBudget | None = None,
         description: str = "",
         labels: dict[str, str] | None = None,
+        alert_manager: AlertManager | None = None,
+        agent_id: str = "",
     ) -> None:
         self.name = name
         self.indicators = indicators
         self.description = description
         self.labels = labels or {}
+        self._alert_manager = alert_manager
+        self._agent_id = agent_id
+        self._last_status: SLOStatus | None = None
 
         # Calculate total error budget from strictest indicator
         if error_budget is None:
@@ -168,27 +175,81 @@ class SLO:
 
         self._created_at = time.time()
 
+    _STATUS_SEVERITY: dict[str, int] = {
+        "healthy": 0,
+        "unknown": 1,
+        "warning": 2,
+        "critical": 3,
+        "exhausted": 4,
+    }
+
     def evaluate(self) -> SLOStatus:
         """Evaluate current SLO status."""
         if self.error_budget.is_exhausted:
-            return SLOStatus.EXHAUSTED
+            status = SLOStatus.EXHAUSTED
+        elif any(a.severity == "critical" for a in self.error_budget.firing_alerts()):
+            status = SLOStatus.CRITICAL
+        elif any(a.severity == "warning" for a in self.error_budget.firing_alerts()):
+            status = SLOStatus.WARNING
+        elif not any(sli.current_value() is not None for sli in self.indicators):
+            status = SLOStatus.UNKNOWN
+        else:
+            status = SLOStatus.HEALTHY
 
-        firing = self.error_budget.firing_alerts()
-        if any(a.severity == "critical" for a in firing):
-            return SLOStatus.CRITICAL
-        if any(a.severity == "warning" for a in firing):
-            return SLOStatus.WARNING
+        if self._alert_manager is not None:
+            self._maybe_fire_alert(status)
 
-        # Check if we have enough data
-        has_data = any(sli.current_value() is not None for sli in self.indicators)
-        if not has_data:
-            return SLOStatus.UNKNOWN
+        self._last_status = status
+        return status
 
-        return SLOStatus.HEALTHY
+    def _maybe_fire_alert(self, status: SLOStatus) -> None:
+        """Send alert if status changed meaningfully."""
+        prev = self._last_status
+        if prev is None and status == SLOStatus.HEALTHY:
+            return
+
+        cur_sev = self._STATUS_SEVERITY.get(status.value, 0)
+        prev_sev = self._STATUS_SEVERITY.get(prev.value, 0) if prev else 0
+
+        if cur_sev > prev_sev:
+            # Worsened
+            severity_map = {
+                SLOStatus.EXHAUSTED: AlertSeverity.CRITICAL,
+                SLOStatus.CRITICAL: AlertSeverity.CRITICAL,
+                SLOStatus.WARNING: AlertSeverity.WARNING,
+            }
+            alert_severity = severity_map.get(status, AlertSeverity.WARNING)
+            self._alert_manager.send(Alert(  # type: ignore[union-attr]
+                title=f"SLO Breach: {self.name}",
+                message=f"SLO {self.name} status changed to {status.value}",
+                severity=alert_severity,
+                agent_id=self._agent_id,
+                slo_name=self.name,
+                dedup_key=f"{self._agent_id}:{self.name}",
+                metadata={
+                    "remaining_percent": self.error_budget.remaining_percent,
+                    "status": status.value,
+                },
+            ))
+        elif status == SLOStatus.HEALTHY and prev is not None and prev != SLOStatus.HEALTHY:
+            # Recovered
+            self._alert_manager.send(Alert(  # type: ignore[union-attr]
+                title=f"SLO Breach: {self.name}",
+                message=f"SLO {self.name} recovered to healthy",
+                severity=AlertSeverity.RESOLVED,
+                agent_id=self._agent_id,
+                slo_name=self.name,
+                dedup_key=f"{self._agent_id}:{self.name}",
+                metadata={
+                    "remaining_percent": self.error_budget.remaining_percent,
+                    "status": status.value,
+                },
+            ))
 
     def record_event(self, good: bool) -> None:
         """Record a good or bad event against the SLO."""
         self.error_budget.record_event(good)
+        self.evaluate()
 
     def indicator_summary(self) -> list[dict[str, Any]]:
         """Get summary of all indicators."""

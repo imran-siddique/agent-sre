@@ -185,9 +185,12 @@ class AlertManager:
         ))
     """
 
-    def __init__(self) -> None:
+    def __init__(self, dedup_window_seconds: float = 300.0) -> None:
         self._channels: Dict[str, ChannelConfig] = {}
         self._history: List[DeliveryResult] = []
+        self._dedup_window_seconds = dedup_window_seconds
+        self._dedup_cache: Dict[str, float] = {}
+        self._suppressed_count: int = 0
         self._formatters = {
             AlertChannel.SLACK: format_slack,
             AlertChannel.PAGERDUTY: format_pagerduty,
@@ -204,8 +207,24 @@ class AlertManager:
     def list_channels(self) -> List[str]:
         return list(self._channels.keys())
 
+    @property
+    def suppressed_count(self) -> int:
+        return self._suppressed_count
+
     def send(self, alert: Alert) -> List[DeliveryResult]:
         """Send alert to all matching channels."""
+        # Deduplication check
+        if alert.dedup_key:
+            if alert.severity == AlertSeverity.RESOLVED:
+                self._dedup_cache.pop(alert.dedup_key, None)
+            else:
+                now = time.time()
+                last_sent = self._dedup_cache.get(alert.dedup_key)
+                if last_sent is not None and (now - last_sent) < self._dedup_window_seconds:
+                    self._suppressed_count += 1
+                    return []
+                self._dedup_cache[alert.dedup_key] = now
+
         results: List[DeliveryResult] = []
         severity_order = [AlertSeverity.INFO, AlertSeverity.WARNING,
                           AlertSeverity.CRITICAL, AlertSeverity.RESOLVED]
@@ -297,6 +316,7 @@ class AlertManager:
             "total_sent": len(self._history),
             "successful": sum(1 for r in self._history if r.success),
             "failed": sum(1 for r in self._history if not r.success),
+            "suppressed": self._suppressed_count,
         }
 
     def clear_history(self) -> None:
