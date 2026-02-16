@@ -12,6 +12,7 @@ from agent_sre.adapters import (
     CrewAIAdapter,
     LangGraphAdapter,
     OpenAIAgentsAdapter,
+    SemanticKernelAdapter,
     TaskRecord,
 )
 
@@ -240,3 +241,38 @@ class TestAdapterSLIIntegration:
 
         assert success_sli._total == 10
         assert cost_sli._task_count == 10
+
+
+class TestSemanticKernelAdapter:
+    def test_basic_lifecycle(self):
+        a = SemanticKernelAdapter()
+        a.on_kernel_start(kernel_name="my_kernel")
+        a.on_plugin_call("search_plugin", "search")
+        a.on_function_result("search_plugin", "search", success=True, cost_usd=0.02)
+        a.on_plan_step("step_1")
+        a.on_llm_call(input_tokens=100, output_tokens=50, cost_usd=0.005)
+        task = a.on_kernel_end(success=True)
+
+        assert task.success
+        assert task.tool_calls == 1
+        assert task.steps == 1
+        assert task.cost_usd == pytest.approx(0.025)
+
+    def test_plugin_error(self):
+        a = SemanticKernelAdapter()
+        a.on_kernel_start()
+        a.on_plugin_call("math", "divide", error="division by zero")
+        a.on_kernel_end()
+
+        assert a.tasks[0].tool_errors == 1
+
+    def test_sli_snapshot(self):
+        a = SemanticKernelAdapter()
+        a.on_kernel_start()
+        a.on_plugin_call("search", "find")
+        a.on_plugin_call("math", "calc")
+        a.on_kernel_end(success=True)
+
+        snap = a.get_sli_snapshot()
+        assert snap["framework"] == "semantic_kernel"
+        assert snap["total_plugin_calls"] == 2

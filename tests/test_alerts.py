@@ -287,3 +287,113 @@ class TestMCPDriftAlerts:
 
         assert len(received) >= 1
         assert "calc" in received[0].message
+
+
+class TestAlertDeduplication:
+    def test_dedup_suppresses_repeat(self):
+        received = []
+        m = AlertManager(dedup_window_seconds=60)
+        m.add_channel(ChannelConfig(
+            channel_type=AlertChannel.CALLBACK,
+            name="test",
+            callback=lambda a: received.append(a),
+        ))
+        alert = Alert(title="Breach", message="Budget low", dedup_key="agent-1:slo-1")
+        m.send(alert)
+        m.send(alert)  # should be suppressed
+        assert len(received) == 1
+        assert m.suppressed_count == 1
+
+    def test_dedup_allows_different_keys(self):
+        received = []
+        m = AlertManager(dedup_window_seconds=60)
+        m.add_channel(ChannelConfig(
+            channel_type=AlertChannel.CALLBACK,
+            name="test",
+            callback=lambda a: received.append(a),
+        ))
+        m.send(Alert(title="A", message="1", dedup_key="key-1"))
+        m.send(Alert(title="B", message="2", dedup_key="key-2"))
+        assert len(received) == 2
+
+    def test_dedup_allows_no_key(self):
+        received = []
+        m = AlertManager(dedup_window_seconds=60)
+        m.add_channel(ChannelConfig(
+            channel_type=AlertChannel.CALLBACK,
+            name="test",
+            callback=lambda a: received.append(a),
+        ))
+        m.send(Alert(title="A", message="1"))
+        m.send(Alert(title="A", message="1"))
+        assert len(received) == 2
+
+    def test_resolved_always_passes(self):
+        received = []
+        m = AlertManager(dedup_window_seconds=60)
+        m.add_channel(ChannelConfig(
+            channel_type=AlertChannel.CALLBACK,
+            name="test",
+            callback=lambda a: received.append(a),
+        ))
+        m.send(Alert(title="Breach", message="x", dedup_key="k1"))
+        m.send(Alert(title="Resolved", message="ok", dedup_key="k1", severity=AlertSeverity.RESOLVED))
+        assert len(received) == 2
+
+    def test_suppressed_in_stats(self):
+        m = AlertManager(dedup_window_seconds=60)
+        m.add_channel(ChannelConfig(
+            channel_type=AlertChannel.CALLBACK,
+            name="test",
+            callback=lambda a: None,
+        ))
+        m.send(Alert(title="A", message="1", dedup_key="k1"))
+        m.send(Alert(title="A", message="1", dedup_key="k1"))
+        stats = m.get_stats()
+        assert stats["suppressed"] == 1
+
+
+class TestSLOAlertAutoFire:
+    def test_slo_fires_alert_on_breach(self):
+        from agent_sre.slo.indicators import TaskSuccessRate
+        from agent_sre.slo.objectives import SLO, ErrorBudget
+
+        received = []
+        manager = AlertManager()
+        manager.add_channel(ChannelConfig(
+            channel_type=AlertChannel.CALLBACK,
+            name="test",
+            callback=lambda a: received.append(a),
+            min_severity=AlertSeverity.INFO,
+        ))
+
+        slo = SLO(
+            name="test-slo",
+            indicators=[TaskSuccessRate(target=0.99)],
+            error_budget=ErrorBudget(total=0.01),
+            alert_manager=manager,
+            agent_id="agent-1",
+        )
+
+        # Exhaust error budget
+        slo.record_event(False)
+
+        # Should have fired alert
+        assert len(received) >= 1
+        assert received[-1].severity in (AlertSeverity.CRITICAL, AlertSeverity.WARNING)
+        assert received[-1].agent_id == "agent-1"
+        assert received[-1].slo_name == "test-slo"
+
+    def test_slo_no_alert_without_manager(self):
+        from agent_sre.slo.indicators import TaskSuccessRate
+        from agent_sre.slo.objectives import SLO, ErrorBudget
+
+        slo = SLO(
+            name="test-slo",
+            indicators=[TaskSuccessRate(target=0.99)],
+            error_budget=ErrorBudget(total=0.01),
+        )
+        # Should not raise
+        slo.record_event(False)
+        status = slo.evaluate()
+        assert status is not None
