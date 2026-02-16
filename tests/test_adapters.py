@@ -10,6 +10,7 @@ import time
 from agent_sre.adapters import (
     AutoGenAdapter,
     CrewAIAdapter,
+    DifyAdapter,
     LangGraphAdapter,
     OpenAIAgentsAdapter,
     SemanticKernelAdapter,
@@ -276,3 +277,57 @@ class TestSemanticKernelAdapter:
         snap = a.get_sli_snapshot()
         assert snap["framework"] == "semantic_kernel"
         assert snap["total_plugin_calls"] == 2
+
+
+class TestDifyAdapter:
+    def test_basic_lifecycle(self):
+        a = DifyAdapter()
+        a.on_workflow_start(workflow_name="support")
+        a.on_node_start("llm_1", node_type="llm")
+        a.on_llm_call(input_tokens=200, output_tokens=100, cost_usd=0.005)
+        a.on_node_end("llm_1")
+        a.on_node_start("tool_1", node_type="tool")
+        a.on_tool_call("web_search")
+        a.on_node_end("tool_1")
+        task = a.on_workflow_end(success=True)
+
+        assert task.success
+        assert task.steps == 2
+        assert task.tool_calls == 1
+        assert task.cost_usd == pytest.approx(0.005)
+
+    def test_http_request(self):
+        a = DifyAdapter()
+        a.on_workflow_start()
+        a.on_http_request("https://api.example.com", status_code=200)
+        a.on_http_request("https://api.example.com", status_code=500, error="server error")
+        a.on_workflow_end()
+
+        assert a.tasks[0].tool_calls == 2
+        assert a.tasks[0].tool_errors == 1
+
+    def test_node_error(self):
+        a = DifyAdapter()
+        a.on_workflow_start()
+        a.on_node_start("n1", node_type="code")
+        a.on_node_end("n1", error="syntax error")
+        a.on_workflow_end(success=False)
+
+        assert not a.tasks[0].success
+        assert a.tasks[0].tool_errors == 1
+
+    def test_sli_snapshot(self):
+        a = DifyAdapter()
+        a.on_workflow_start()
+        a.on_node_start("n1", node_type="llm")
+        a.on_node_end("n1")
+        a.on_node_start("n2", node_type="tool")
+        a.on_node_end("n2")
+        a.on_node_start("n3", node_type="llm")
+        a.on_node_end("n3")
+        a.on_workflow_end(success=True)
+
+        snap = a.get_sli_snapshot()
+        assert snap["framework"] == "dify"
+        assert snap["node_type_counts"]["llm"] == 2
+        assert snap["node_type_counts"]["tool"] == 1
