@@ -45,7 +45,8 @@ otel = [
 langfuse = ["langfuse>=2.0"]
 arize = ["arize-phoenix>=4.0"]
 langchain = ["langchain-core>=0.2"]
-all = ["opentelemetry-exporter-otlp>=1.20", "langfuse>=2.0", "arize-phoenix>=4.0", "langchain-core>=0.2"]
+llamaindex = ["llama-index-core>=0.10"]
+all = ["opentelemetry-exporter-otlp>=1.20", "langfuse>=2.0", "arize-phoenix>=4.0", "langchain-core>=0.2", "llama-index-core>=0.10"]
 
 [project.urls]
 Homepage = "https://github.com/imran-siddique/agent-sre"

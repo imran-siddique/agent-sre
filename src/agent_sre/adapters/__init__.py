@@ -10,6 +10,7 @@ Adapters:
 - AutoGenAdapter: Instrument AutoGen agent conversations
 - OpenAIAgentsAdapter: Instrument OpenAI Agents SDK runs
 - SemanticKernelAdapter: Instrument Microsoft Semantic Kernel
+- DifyAdapter: Instrument Dify workflow engine
 
 All adapters are duck-typed — no framework imports required.
 """
@@ -420,4 +421,67 @@ class SemanticKernelAdapter(BaseAdapter):
     def get_sli_snapshot(self) -> Dict[str, Any]:
         snapshot = super().get_sli_snapshot()
         snapshot["total_plugin_calls"] = len(self._plugin_calls)
+        return snapshot
+
+
+class DifyAdapter(BaseAdapter):
+    """
+    Adapter for Dify workflow engine.
+
+    Usage:
+        adapter = DifyAdapter()
+        adapter.on_workflow_start(workflow_name="customer_support")
+        adapter.on_node_start("llm_1", node_type="llm")
+        adapter.on_llm_call(input_tokens=200, output_tokens=100, cost_usd=0.005)
+        adapter.on_node_end("llm_1")
+        adapter.on_node_start("tool_1", node_type="tool")
+        adapter.on_tool_call("web_search")
+        adapter.on_node_end("tool_1")
+        adapter.on_workflow_end(success=True)
+    """
+
+    def __init__(self) -> None:
+        super().__init__("dify")
+        self._node_types: Dict[str, str] = {}
+
+    def on_workflow_start(self, workflow_name: str = "", **kwargs: Any) -> TaskRecord:
+        self._node_types.clear()
+        return self._start_task({"workflow_name": workflow_name, **kwargs})
+
+    def on_node_start(self, node_id: str, node_type: str = "") -> None:
+        if self._current:
+            self._current.steps += 1
+            self._node_types[node_id] = node_type
+
+    def on_node_end(self, node_id: str, error: str = "") -> None:
+        if self._current and error:
+            self._current.tool_errors += 1
+
+    def on_tool_call(self, tool_name: str, error: str = "") -> None:
+        if self._current:
+            self._current.tool_calls += 1
+            if error:
+                self._current.tool_errors += 1
+
+    def on_llm_call(self, input_tokens: int = 0, output_tokens: int = 0,
+                    cost_usd: float = 0.0) -> None:
+        if self._current:
+            self._current.input_tokens += input_tokens
+            self._current.output_tokens += output_tokens
+            self._current.cost_usd += cost_usd
+
+    def on_http_request(self, url: str, status_code: int = 200, error: str = "") -> None:
+        if self._current:
+            self._current.tool_calls += 1
+            if error or status_code >= 400:
+                self._current.tool_errors += 1
+
+    def on_workflow_end(self, success: bool = True, error: str = "") -> TaskRecord:
+        return self._finish_task(success=success, error=error)
+
+    def get_sli_snapshot(self) -> Dict[str, Any]:
+        snapshot = super().get_sli_snapshot()
+        snapshot["node_type_counts"] = {}
+        for nt in self._node_types.values():
+            snapshot["node_type_counts"][nt] = snapshot["node_type_counts"].get(nt, 0) + 1
         return snapshot
