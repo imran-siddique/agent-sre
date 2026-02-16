@@ -6,10 +6,30 @@
 # Run the LangChain monitoring demo:
 #   docker compose up langchain-monitor
 #
+# Run the API server:
+#   docker compose up api
+#
 # Run all demos:
 #   docker compose up
 
 services:
+  api:
+    build: .
+    command: python -c "
+      from agent_sre.api import AgentSREServer, APIState;
+      from agent_sre.slo.indicators import TaskSuccessRate;
+      from agent_sre.slo.objectives import SLO;
+      state = APIState();
+      sli = TaskSuccessRate(target=0.95, window='1h');
+      sli.record_task(True);
+      state.add_slo(SLO(name='demo-slo', indicators=[sli]));
+      state.set_metadata('version', '0.1.0');
+      print('Agent-SRE API: http://0.0.0.0:8080');
+      AgentSREServer(state, port=8080).serve_forever()
+      "
+    ports:
+      - "8080:8080"
+
   quickstart:
     build: .
     command: python examples/quickstart.py
