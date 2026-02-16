@@ -1,0 +1,31 @@
+# Agent-SRE Demo Stack
+#
+# Run the quickstart demo:
+#   docker compose up quickstart
+#
+# Run the LangChain monitoring demo:
+#   docker compose up langchain-monitor
+#
+# Run all demos:
+#   docker compose up
+
+services:
+  quickstart:
+    build: .
+    command: python examples/quickstart.py
+
+  langchain-monitor:
+    build: .
+    command: python examples/langchain_monitor.py
+
+  cost-guard:
+    build: .
+    command: python examples/cost_guard.py
+
+  chaos-test:
+    build: .
+    command: python examples/chaos_test.py
+
+  canary-rollout:
+    build: .
+    command: python examples/canary_rollout.py
