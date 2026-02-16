@@ -381,7 +381,7 @@ Agent SRE tells you *if it was within budget* and *what to do about it*.
 
 ## Status & Maturity
 
-### ✅ Fully Implemented (6,000+ lines, 44+ tests)
+### ✅ Fully Implemented (10,000+ lines, 491 tests)
 
 | Component | Status | Description |
 |---|---|---|
@@ -393,15 +393,15 @@ Agent SRE tells you *if it was within budget* and *what to do about it*.
 | **Incident Manager** | ✅ Stable | Signal correlation, circuit breaker, automated postmortem |
 | **Agent OS Bridge** | ✅ Stable | Policy violations → SLI, audit entries → signals |
 | **AgentMesh Bridge** | ✅ Stable | Trust scores → SLI, mesh events → signals |
-
-### ⚠️ In Progress
-
-| Component | Status | Notes |
-|---|---|---|
-| OpenTelemetry export | 🔶 Stub | Dependencies wired, exporter not yet implemented |
-| Deployment configs | 🔶 Empty | `deployments/` folder exists, no Docker/Helm yet |
-| SLO templates | 🔶 Empty | `specs/` folder exists, no pre-built configs yet |
-| Integration tests | 🔶 Empty | `integration/` folder exists, unit tests only |
+| **OpenTelemetry** | ✅ Stable | Full span/metric export with OTEL SDK |
+| **Langfuse** | ✅ Stable | SLO scoring and cost observation export |
+| **LangChain Callbacks** | ✅ Stable | Duck-typed callback handler for SLI collection |
+| **Arize/Phoenix** | ✅ Stable | Phoenix span export + evaluation import |
+| **LLM-as-Judge Evals** | ✅ Stable | RulesJudge + JudgeProtocol, 5 criteria, 3 suite presets |
+| **MCP Drift Detection** | ✅ Stable | Tool schema fingerprinting, change severity classification |
+| **Webhook Alerting** | ✅ Stable | Slack, PagerDuty, generic webhook formatters |
+| **SLO Templates** | ✅ Stable | 4 domain-specific templates (support, coding, research, pipeline) |
+| **Integration Tests** | ✅ Stable | Cross-module tests covering all subsystems |
 
 ---
 
@@ -410,15 +410,25 @@ Agent SRE tells you *if it was within budget* and *what to do about it*.
 | Example | Description | Command |
 |---|---|---|
 | [Quickstart](examples/quickstart.py) | SLO + cost + incident in one script | `python examples/quickstart.py` |
+| [LangChain Monitor](examples/langchain_monitor.py) | LangChain RAG agent with SLOs + evals | `python examples/langchain_monitor.py` |
 | [Cost Guard](examples/cost_guard.py) | Budget enforcement with throttling | `python examples/cost_guard.py` |
 | [Canary Rollout](examples/canary_rollout.py) | Shadow + canary with auto-rollback | `python examples/canary_rollout.py` |
 | [Chaos Test](examples/chaos_test.py) | Fault injection and resilience scoring | `python examples/chaos_test.py` |
+
+**Docker:**
+
+```bash
+docker compose up quickstart          # Quick demo
+docker compose up langchain-monitor   # LangChain + SLOs + LLM-as-Judge
+```
 
 ---
 
 ## Documentation
 
 - [Getting Started](docs/getting-started.md) — Install and define your first SLO in 5 minutes
+- [Deployment Guide](docs/deployment.md) — Docker, integration patterns, production checklist
+- [Security Model](docs/security.md) — Threat model, attack vectors, best practices
 - [Concepts](docs/concepts.md) — Why agent reliability is different from infrastructure reliability
 - [Integration Guide](docs/integration-guide.md) — Use with Agent OS, AgentMesh, and OpenTelemetry
 - [Comparison](docs/comparison.md) — Detailed comparison with other tools
