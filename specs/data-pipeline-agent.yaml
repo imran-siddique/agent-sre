@@ -1,0 +1,44 @@
+# Data Pipeline Agent SLO Template
+# ==================================
+# For agents that ETL, transform, validate, or route data.
+# High reliability required — data loss or corruption is unacceptable.
+#
+# Usage:
+#   from agent_sre.specs import load_slo_template
+#   slo = load_slo_template("data-pipeline-agent")
+
+name: data-pipeline-agent
+description: >
+  SLO for data processing agents. High reliability and tool accuracy
+  are critical — data corruption or loss is unacceptable.
+  Cost tolerance is higher since batch processing amortizes.
+
+labels:
+  domain: data-engineering
+  tier: production
+
+indicators:
+  - type: TaskSuccessRate
+    target: 0.99
+    window: 24h
+
+  - type: ResponseLatency
+    target_ms: 120000
+    percentile: 95
+    window: 1h
+
+  - type: CostPerTask
+    target_usd: 0.50
+    window: 24h
+
+  - type: ToolCallAccuracy
+    target: 0.999
+    window: 7d
+
+  - type: PolicyCompliance
+    target: 1.0
+    window: 24h
+
+error_budget:
+  target: 0.99
+  window_days: 30

@@ -1,0 +1,43 @@
+# Coding Agent SLO Template
+# ===========================
+# For agents that write, review, or debug code.
+# High accuracy required — wrong code is worse than slow code.
+#
+# Usage:
+#   from agent_sre.specs import load_slo_template
+#   slo = load_slo_template("coding-agent")
+
+name: coding-agent
+description: >
+  SLO for code generation and review agents. Prioritizes correctness
+  over speed — a wrong code suggestion is worse than a slow one.
+
+labels:
+  domain: software-engineering
+  tier: production
+
+indicators:
+  - type: TaskSuccessRate
+    target: 0.90
+    window: 24h
+
+  - type: ResponseLatency
+    target_ms: 30000
+    percentile: 95
+    window: 1h
+
+  - type: CostPerTask
+    target_usd: 1.00
+    window: 24h
+
+  - type: HallucinationRate
+    target: 0.02
+    window: 24h
+
+  - type: ToolCallAccuracy
+    target: 0.995
+    window: 7d
+
+error_budget:
+  target: 0.90
+  window_days: 30

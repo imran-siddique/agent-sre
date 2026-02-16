@@ -1,0 +1,42 @@
+# Customer Support Agent SLO Template
+# =====================================
+# For agents that handle customer queries, ticket routing, FAQ responses.
+#
+# Usage:
+#   from agent_sre.specs import load_slo_template
+#   slo = load_slo_template("customer-support-agent")
+
+name: customer-support-agent
+description: >
+  SLO for customer support agents handling queries, tickets, and FAQ.
+  Optimized for high success rate with moderate latency tolerance.
+
+labels:
+  domain: customer-support
+  tier: production
+
+indicators:
+  - type: TaskSuccessRate
+    target: 0.95
+    window: 24h
+
+  - type: ResponseLatency
+    target_ms: 10000
+    percentile: 95
+    window: 1h
+
+  - type: CostPerTask
+    target_usd: 0.25
+    window: 24h
+
+  - type: HallucinationRate
+    target: 0.03
+    window: 24h
+
+  - type: ToolCallAccuracy
+    target: 0.98
+    window: 7d
+
+error_budget:
+  target: 0.95
+  window_days: 30

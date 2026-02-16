@@ -1,0 +1,48 @@
+# Research Agent SLO Template
+# =============================
+# For agents that search, summarize, and synthesize information.
+# Moderate latency tolerance, high accuracy on source attribution.
+#
+# Usage:
+#   from agent_sre.specs import load_slo_template
+#   slo = load_slo_template("research-agent")
+
+name: research-agent
+description: >
+  SLO for research and analysis agents. Balances thoroughness
+  with cost — research queries can be expensive due to multiple
+  tool calls and large context windows.
+
+labels:
+  domain: research
+  tier: production
+
+indicators:
+  - type: TaskSuccessRate
+    target: 0.92
+    window: 24h
+
+  - type: ResponseLatency
+    target_ms: 60000
+    percentile: 95
+    window: 1h
+
+  - type: CostPerTask
+    target_usd: 2.00
+    window: 24h
+
+  - type: HallucinationRate
+    target: 0.05
+    window: 24h
+
+  - type: ToolCallAccuracy
+    target: 0.97
+    window: 7d
+
+  - type: DelegationChainDepth
+    max_depth: 3
+    window: 24h
+
+error_budget:
+  target: 0.92
+  window_days: 30
