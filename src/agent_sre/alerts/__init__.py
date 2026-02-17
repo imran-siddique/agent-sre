@@ -402,3 +402,105 @@ class AlertManager:
 
     def clear_history(self) -> None:
         self._history.clear()
+
+
+class PersistentAlertManager(AlertManager):
+    """AlertManager with SQLite-backed alert history.
+
+    Persists all alerts and delivery results to a SQLite database
+    for audit trail and post-incident analysis.
+    """
+
+    def __init__(self, db_path: str = "agent_sre_alerts.db",
+                 dedup_window_seconds: float = 300.0) -> None:
+        super().__init__(dedup_window_seconds=dedup_window_seconds)
+        self._db_path = db_path
+        self._init_db()
+
+    def _init_db(self) -> None:
+        import sqlite3
+        conn = sqlite3.connect(self._db_path)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS alerts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
+                message TEXT,
+                severity TEXT,
+                source TEXT,
+                agent_id TEXT,
+                slo_name TEXT,
+                dedup_key TEXT,
+                metadata TEXT,
+                timestamp REAL
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS delivery_results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                alert_id INTEGER,
+                channel_name TEXT,
+                success INTEGER,
+                status_code INTEGER,
+                error TEXT,
+                timestamp REAL
+            )
+        """)
+        conn.commit()
+        conn.close()
+
+    def send(self, alert: Alert) -> List[DeliveryResult]:
+        results = super().send(alert)
+        if results or not alert.dedup_key:
+            self._persist_alert(alert, results)
+        return results
+
+    def _persist_alert(self, alert: Alert, results: List[DeliveryResult]) -> None:
+        import sqlite3
+        import json as _json
+        conn = sqlite3.connect(self._db_path)
+        cursor = conn.execute(
+            "INSERT INTO alerts (title, message, severity, source, agent_id, "
+            "slo_name, dedup_key, metadata, timestamp) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (alert.title, alert.message, alert.severity.value, alert.source,
+             alert.agent_id, alert.slo_name, alert.dedup_key,
+             _json.dumps(alert.metadata), alert.timestamp),
+        )
+        alert_id = cursor.lastrowid
+        for r in results:
+            conn.execute(
+                "INSERT INTO delivery_results (alert_id, channel_name, success, "
+                "status_code, error, timestamp) VALUES (?, ?, ?, ?, ?, ?)",
+                (alert_id, r.channel_name, int(r.success), r.status_code,
+                 r.error, r.timestamp),
+            )
+        conn.commit()
+        conn.close()
+
+    def query_alerts(self, agent_id: str = "", severity: str = "",
+                     limit: int = 100) -> List[Dict[str, Any]]:
+        """Query persisted alerts."""
+        import sqlite3
+        conn = sqlite3.connect(self._db_path)
+        conn.row_factory = sqlite3.Row
+        query = "SELECT * FROM alerts WHERE 1=1"
+        params: list = []
+        if agent_id:
+            query += " AND agent_id = ?"
+            params.append(agent_id)
+        if severity:
+            query += " AND severity = ?"
+            params.append(severity)
+        query += " ORDER BY timestamp DESC LIMIT ?"
+        params.append(limit)
+        rows = conn.execute(query, params).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def alert_count(self) -> int:
+        """Get total persisted alert count."""
+        import sqlite3
+        conn = sqlite3.connect(self._db_path)
+        count = conn.execute("SELECT COUNT(*) FROM alerts").fetchone()[0]
+        conn.close()
+        return count
