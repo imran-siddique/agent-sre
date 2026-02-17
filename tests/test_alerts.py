@@ -15,8 +15,10 @@ from agent_sre.alerts import (
     ChannelConfig,
     DeliveryResult,
     format_generic,
+    format_opsgenie,
     format_pagerduty,
     format_slack,
+    format_teams,
 )
 
 
@@ -397,3 +399,70 @@ class TestSLOAlertAutoFire:
         slo.record_event(False)
         status = slo.evaluate()
         assert status is not None
+
+
+# =============================================================================
+# OpsGenie Formatter
+# =============================================================================
+
+
+class TestOpsGenieFormatter:
+    def test_basic_format(self):
+        a = Alert(title="SLO Breach", message="Budget low", severity=AlertSeverity.CRITICAL,
+                  agent_id="agent-1", slo_name="my-slo")
+        payload = format_opsgenie(a)
+        assert payload["message"] == "SLO Breach"
+        assert payload["priority"] == "P1"
+        assert "agent:agent-1" in payload["tags"]
+        assert payload["alias"] == "agent-1:my-slo"
+
+    def test_info_priority(self):
+        a = Alert(title="Info", message="ok", severity=AlertSeverity.INFO)
+        payload = format_opsgenie(a)
+        assert payload["priority"] == "P5"
+
+
+# =============================================================================
+# Teams Formatter
+# =============================================================================
+
+
+class TestTeamsFormatter:
+    def test_basic_format(self):
+        a = Alert(title="SLO Breach", message="Budget low", severity=AlertSeverity.CRITICAL,
+                  agent_id="agent-1", slo_name="my-slo")
+        payload = format_teams(a)
+        assert payload["type"] == "message"
+        card = payload["attachments"][0]["content"]
+        assert card["type"] == "AdaptiveCard"
+        body = card["body"]
+        assert body[0]["text"] == "SLO Breach"
+
+    def test_facts(self):
+        a = Alert(title="Test", message="msg", agent_id="a1", slo_name="s1")
+        payload = format_teams(a)
+        facts = payload["attachments"][0]["content"]["body"][2]["facts"]
+        fact_titles = [f["title"] for f in facts]
+        assert "Agent" in fact_titles
+        assert "SLO" in fact_titles
+
+
+# =============================================================================
+# OpsGenie & Teams Channel Registration
+# =============================================================================
+
+
+class TestOpsGenieChannel:
+    def test_callback_delivery(self):
+        received = []
+        m = AlertManager()
+        m.add_channel(ChannelConfig(
+            channel_type=AlertChannel.OPSGENIE,
+            name="opsgenie",
+            callback=lambda a: received.append(a),
+        ))
+        assert AlertChannel.OPSGENIE in m._formatters
+
+    def test_teams_formatter_registered(self):
+        m = AlertManager()
+        assert AlertChannel.TEAMS in m._formatters

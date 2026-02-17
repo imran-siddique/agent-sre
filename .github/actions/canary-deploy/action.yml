@@ -1,0 +1,51 @@
+name: 'Agent SRE Canary Deploy'
+description: 'Progressive canary deployment for AI agents with Agent-SRE'
+inputs:
+  agent-name:
+    description: 'Name of the agent to deploy'
+    required: true
+  canary-percentage:
+    description: 'Initial canary traffic percentage (0-100)'
+    required: false
+    default: '10'
+  promotion-threshold:
+    description: 'SLO compliance threshold for auto-promotion (0.0-1.0)'
+    required: false
+    default: '0.95'
+  evaluation-window:
+    description: 'Time in seconds to evaluate canary before promotion'
+    required: false
+    default: '300'
+  python-version:
+    description: 'Python version to use'
+    required: false
+    default: '3.12'
+outputs:
+  status:
+    description: 'Deployment status (promoted, rolled-back, evaluating)'
+    value: ${{ steps.canary.outputs.status }}
+  slo-compliance:
+    description: 'SLO compliance score at end of evaluation'
+    value: ${{ steps.canary.outputs.slo_compliance }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install agent-sre
+      shell: bash
+      run: pip install agent-sre
+
+    - name: Run canary evaluation
+      id: canary
+      shell: bash
+      env:
+        AGENT_NAME: ${{ inputs.agent-name }}
+        CANARY_PCT: ${{ inputs.canary-percentage }}
+        PROMOTION_THRESHOLD: ${{ inputs.promotion-threshold }}
+        EVAL_WINDOW: ${{ inputs.evaluation-window }}
+      run: |
+        python ${{ github.action_path }}/canary.py
