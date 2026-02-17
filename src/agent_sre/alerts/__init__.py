@@ -504,3 +504,7 @@ class PersistentAlertManager(AlertManager):
         count = conn.execute("SELECT COUNT(*) FROM alerts").fetchone()[0]
         conn.close()
         return count
+
+
+# Re-export dedup module classes for convenience
+from agent_sre.alerts.dedup import AlertBatcher, AlertDeduplicator, alert_fingerprint  # noqa: E402
