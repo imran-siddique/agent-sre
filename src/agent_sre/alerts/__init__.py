@@ -26,6 +26,8 @@ class AlertChannel(Enum):
     PAGERDUTY = "pagerduty"
     GENERIC_WEBHOOK = "generic_webhook"
     CALLBACK = "callback"  # In-process callback (for testing)
+    OPSGENIE = "opsgenie"
+    TEAMS = "teams"
 
 
 class AlertSeverity(Enum):
@@ -161,6 +163,75 @@ def format_generic(alert: Alert) -> Dict[str, Any]:
     return alert.to_dict()
 
 
+def format_opsgenie(alert: Alert) -> Dict[str, Any]:
+    """Format alert as OpsGenie Alert API payload."""
+    priority_map = {
+        AlertSeverity.INFO: "P5",
+        AlertSeverity.WARNING: "P3",
+        AlertSeverity.CRITICAL: "P1",
+        AlertSeverity.RESOLVED: "P5",
+    }
+    payload: Dict[str, Any] = {
+        "message": alert.title,
+        "description": alert.message,
+        "priority": priority_map.get(alert.severity, "P3"),
+        "source": alert.source,
+        "tags": [f"agent:{alert.agent_id}"] if alert.agent_id else [],
+        "details": alert.metadata,
+    }
+    if alert.slo_name:
+        payload["alias"] = f"{alert.agent_id}:{alert.slo_name}"
+        payload["tags"].append(f"slo:{alert.slo_name}")
+    return payload
+
+
+def format_teams(alert: Alert) -> Dict[str, Any]:
+    """Format alert as Microsoft Teams incoming webhook payload (Adaptive Card)."""
+    severity_color = {
+        AlertSeverity.INFO: "default",
+        AlertSeverity.WARNING: "warning",
+        AlertSeverity.CRITICAL: "attention",
+        AlertSeverity.RESOLVED: "good",
+    }
+    facts = []
+    if alert.agent_id:
+        facts.append({"title": "Agent", "value": alert.agent_id})
+    if alert.slo_name:
+        facts.append({"title": "SLO", "value": alert.slo_name})
+    facts.append({"title": "Severity", "value": alert.severity.value})
+
+    card = {
+        "type": "message",
+        "attachments": [{
+            "contentType": "application/vnd.microsoft.card.adaptive",
+            "content": {
+                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                "type": "AdaptiveCard",
+                "version": "1.4",
+                "body": [
+                    {
+                        "type": "TextBlock",
+                        "text": alert.title,
+                        "weight": "bolder",
+                        "size": "large",
+                        "color": severity_color.get(alert.severity, "default"),
+                    },
+                    {
+                        "type": "TextBlock",
+                        "text": alert.message,
+                        "wrap": True,
+                    },
+                    {
+                        "type": "FactSet",
+                        "facts": facts,
+                    },
+                ],
+            },
+        }],
+    }
+    return card
+
+
 # ---------------------------------------------------------------------------
 # AlertManager
 # ---------------------------------------------------------------------------
@@ -196,6 +267,8 @@ class AlertManager:
             AlertChannel.PAGERDUTY: format_pagerduty,
             AlertChannel.GENERIC_WEBHOOK: format_generic,
             AlertChannel.CALLBACK: format_generic,
+            AlertChannel.OPSGENIE: format_opsgenie,
+            AlertChannel.TEAMS: format_teams,
         }
 
     def add_channel(self, config: ChannelConfig) -> None:
@@ -260,7 +333,11 @@ class AlertManager:
             if config.channel_type == AlertChannel.PAGERDUTY and config.token:
                 payload["routing_key"] = config.token
 
-            return self._http_post(config.name, config.url, payload)
+            headers: Optional[Dict[str, str]] = None
+            if config.channel_type == AlertChannel.OPSGENIE and config.token:
+                headers = {"Authorization": f"GenieKey {config.token}"}
+
+            return self._http_post(config.name, config.url, payload, headers=headers)
 
         except Exception as e:
             return DeliveryResult(
@@ -269,7 +346,8 @@ class AlertManager:
                 error=str(e),
             )
 
-    def _http_post(self, channel_name: str, url: str, payload: Dict) -> DeliveryResult:
+    def _http_post(self, channel_name: str, url: str, payload: Dict,
+                   headers: Optional[Dict[str, str]] = None) -> DeliveryResult:
         """Send HTTP POST. Isolated for testability."""
         if not url:
             return DeliveryResult(
@@ -280,10 +358,13 @@ class AlertManager:
 
         try:
             data = json.dumps(payload).encode("utf-8")
+            req_headers = {"Content-Type": "application/json"}
+            if headers:
+                req_headers.update(headers)
             req = urllib.request.Request(
                 url,
                 data=data,
-                headers={"Content-Type": "application/json"},
+                headers=req_headers,
                 method="POST",
             )
             with urllib.request.urlopen(req, timeout=10) as resp:
