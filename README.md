@@ -343,12 +343,29 @@ agent-sre/
 │   │   ├── detector.py    # Signal correlation, deduplication, routing
 │   │   ├── circuit_breaker.py  # Per-agent circuit breaker (CLOSED/OPEN/HALF_OPEN)
 │   │   └── postmortem.py  # Automated postmortem with timeline + action items
-│   └── integrations/      # Ecosystem bridges
-│       ├── agent_os/      # Agent OS policy + audit → SLI bridge
-│       ├── agent_mesh/    # AgentMesh trust score → SLI bridge
-│       └── otel/          # OpenTelemetry export
+│   ├── integrations/      # Ecosystem bridges
+│   │   ├── agent_os/      # Agent OS policy + audit → SLI bridge
+│   │   ├── agent_mesh/    # AgentMesh trust score → SLI bridge
+│   │   ├── otel/          # OpenTelemetry export
+│   │   ├── langchain/     # LangChain callback handler
+│   │   ├── llamaindex/    # LlamaIndex callback handler
+│   │   ├── langfuse/      # Langfuse SLO scoring + cost export
+│   │   ├── langsmith/     # LangSmith trace + feedback export
+│   │   ├── arize/         # Arize/Phoenix span export
+│   │   ├── braintrust/    # Braintrust eval + experiment export
+│   │   ├── helicone/      # Helicone header injection + logging
+│   │   ├── datadog/       # Datadog metrics + events export
+│   │   ├── agentops/      # AgentOps session + event recording
+│   │   ├── prometheus/    # Prometheus /metrics text format
+│   │   └── mcp/           # MCP drift detection
+│   ├── mcp/               # MCP server (agent self-monitoring tools)
+│   ├── cli/               # CLI tool (agent-sre command)
+│   └── alerts/            # Webhook alerting (Slack, PagerDuty, OpsGenie, Teams)
+├── dashboards/            # Pre-built Grafana dashboards
+├── operator/              # Kubernetes CRDs (AgentSLO, CostBudget)
+├── .github/actions/       # GitHub Actions (canary deployment)
 ├── examples/              # 4 runnable demos
-├── tests/                 # 44+ test functions
+├── tests/                 # 878 tests
 ├── docs/                  # Getting started, concepts, integration guide
 └── specs/                 # SLO templates (coming soon)
 ```
@@ -381,11 +398,11 @@ Agent SRE tells you *if it was within budget* and *what to do about it*.
 
 ## Status & Maturity
 
-### ✅ Fully Implemented (15,000+ lines, 730 tests)
+### ✅ Fully Implemented (20,000+ lines, 878 tests)
 
 | Component | Status | Description |
 |---|---|---|
-| **SLO Engine** | ✅ Stable | 7 SLI types, error budgets, burn rate alerts, time windows |
+| **SLO Engine** | ✅ Stable | 7 SLI types, error budgets, burn rate alerts, auto-fire to AlertManager |
 | **Replay Engine** | ✅ Stable | Capture, replay, diff, counterfactual, distributed traces |
 | **Progressive Delivery** | ✅ Stable | Shadow mode, canary rollouts, analysis gates, auto-rollback |
 | **Chaos Engine** | ✅ Stable | 9 fault templates, resilience scoring, abort conditions |
@@ -394,23 +411,35 @@ Agent SRE tells you *if it was within budget* and *what to do about it*.
 | **Agent OS Bridge** | ✅ Stable | Policy violations → SLI, audit entries → signals |
 | **AgentMesh Bridge** | ✅ Stable | Trust scores → SLI, mesh events → signals |
 | **OpenTelemetry** | ✅ Stable | Full span/metric export with OTEL SDK |
-| **Langfuse** | ✅ Stable | SLO scoring and cost observation export |
 | **LangChain Callbacks** | ✅ Stable | Duck-typed callback handler for SLI collection |
+| **LlamaIndex Callbacks** | ✅ Stable | Query/retriever/LLM tracking for RAG pipelines |
+| **Langfuse** | ✅ Stable | SLO scoring and cost observation export |
+| **LangSmith** | ✅ Stable | Run tracing and evaluation feedback export |
 | **Arize/Phoenix** | ✅ Stable | Phoenix span export + evaluation import |
-| **LLM-as-Judge Evals** | ✅ Stable | RulesJudge + JudgeProtocol, 5 criteria, 3 suite presets |
+| **Braintrust** | ✅ Stable | Eval-driven monitoring and experiment export |
+| **Helicone** | ✅ Stable | Header injection for proxy-based cost/latency tracking |
+| **Datadog** | ✅ Stable | Metrics and events export for LLM monitoring |
+| **AgentOps** | ✅ Stable | Session recording and event tracking |
+| **W&B** | ✅ Stable | Experiment tracking with SRE metrics |
+| **MLflow** | ✅ Stable | Experiment logging with SLO data |
+| **Prometheus** | ✅ Stable | Native `/metrics` endpoint + Grafana dashboards |
 | **MCP Drift Detection** | ✅ Stable | Tool schema fingerprinting, change severity classification |
-| **Webhook Alerting** | ✅ Stable | Slack, PagerDuty, generic webhook formatters |
+| **MCP Server** | ✅ Stable | Agent self-monitoring tools (SLO check, cost budget, rollout status) |
+| **Webhook Alerting** | ✅ Stable | Slack, PagerDuty, OpsGenie, Microsoft Teams + deduplication |
+| **Alert Persistence** | ✅ Stable | SQLite-backed alert history for audit trail |
+| **Framework Adapters** | ✅ Stable | LangGraph, CrewAI, AutoGen, OpenAI Agents SDK, Semantic Kernel, Dify |
+| **CLI Tool** | ✅ Stable | `agent-sre` CLI for SLO status, cost summary, system info |
+| **GitHub Actions** | ✅ Stable | Canary deployment action for CI/CD pipelines |
+| **K8s CRDs** | ✅ Stable | AgentSLO and CostBudget custom resource definitions |
+| **LLM-as-Judge Evals** | ✅ Stable | RulesJudge + JudgeProtocol, 5 criteria, 3 suite presets |
 | **SLO Templates** | ✅ Stable | 4 domain-specific templates (support, coding, research, pipeline) |
-| **Integration Tests** | ✅ Stable | Cross-module tests covering all subsystems |
-| **Protocol Tracing** | ✅ Stable | A2A/MCP-aware distributed tracing with W3C context propagation |
 | **REST API** | ✅ Stable | Zero-dependency HTTP API for SLO status, incidents, cost, traces |
 | **Fleet Management** | ✅ Stable | Multi-agent registry, heartbeats, aggregate health, filtering |
-| **K8s Operator** | ✅ Stable | AgentRollout CRD, reconciler, status conditions |
 | **Helm Chart** | ✅ Stable | Deployment, Service, CRD templates with configurable values |
 | **Benchmark Suite** | ✅ Stable | 10 scenarios across 6 categories with scoring and reporting |
 | **Certification** | ✅ Stable | Bronze/Silver/Gold reliability tiers with evidence-based evaluation |
-| **Framework Adapters** | ✅ Stable | LangGraph, CrewAI, AutoGen, OpenAI Agents SDK adapters |
 | **A/B Testing** | ✅ Stable | Experiment engine with Welch's t-test and traffic splitting |
+| **Protocol Tracing** | ✅ Stable | A2A/MCP-aware distributed tracing with W3C context propagation |
 
 ---
 
