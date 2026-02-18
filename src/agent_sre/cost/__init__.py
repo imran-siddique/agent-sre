@@ -1,1 +1,1 @@
-"""Cost Guard — Budget management and anomaly detection."""
+"""Cost Guard — Budget management, anomaly detection, and cost optimization."""
