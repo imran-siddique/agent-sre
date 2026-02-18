@@ -1,0 +1,37 @@
+# Base SLO for all AI agents
+# ===========================
+# Default reliability target: 99% availability, 5s latency.
+# Other SLO specs can inherit from this base.
+
+name: base-agent-slo
+description: >
+  Base SLO for all AI agents. Provides sensible defaults for
+  availability and latency that most agents should meet.
+service: "*"
+
+sli:
+  metric: agent_task_success_ratio
+  threshold: 0.99
+  comparison: gte
+
+target: 99.0
+window: 30d
+
+error_budget_policy:
+  burn_rate_thresholds:
+    - name: slow_burn
+      rate: 2.0
+      severity: warning
+      window_seconds: 21600
+    - name: fast_burn
+      rate: 10.0
+      severity: critical
+      window_seconds: 3600
+
+labels:
+  tier: standard
+  domain: general
+
+metadata:
+  owner: platform-team
+  latency_p95_ms: 5000
