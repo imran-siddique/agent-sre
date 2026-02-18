@@ -1,0 +1,34 @@
+runbooks:
+  - id: throttle-traffic
+    name: Throttle Traffic
+    description: >
+      Apply rate limiting to an agent experiencing high load or cost anomalies.
+      Monitors impact and removes limits once the situation stabilizes.
+    trigger_conditions:
+      - type: cost_anomaly
+      - type: latency_spike
+        severity: p1
+    labels:
+      category: traffic-management
+      risk: low
+    steps:
+      - name: Check current load
+        action: "agent-sre metrics query --agent ${AGENT_ID} --metric request_rate"
+        timeout_seconds: 30
+        requires_approval: false
+
+      - name: Apply rate limit
+        action: "agent-sre ratelimit set --agent ${AGENT_ID} --rps 10"
+        timeout_seconds: 30
+        requires_approval: true
+        rollback_action: "agent-sre ratelimit remove --agent ${AGENT_ID}"
+
+      - name: Monitor after throttle
+        action: "agent-sre metrics watch --agent ${AGENT_ID} --duration 120"
+        timeout_seconds: 180
+        requires_approval: false
+
+      - name: Remove rate limit
+        action: "agent-sre ratelimit remove --agent ${AGENT_ID}"
+        timeout_seconds: 30
+        requires_approval: false

@@ -1,0 +1,35 @@
+runbooks:
+  - id: rollback-version
+    name: Rollback Agent Version
+    description: >
+      Roll back an agent to its previous known-good version after a deployment
+      causes degraded reliability.
+    trigger_conditions:
+      - type: slo_breach
+        severity: p1
+      - type: error_budget_exhausted
+    labels:
+      category: deployment
+      risk: medium
+    steps:
+      - name: Identify previous version
+        action: "agent-sre deploy history --agent ${AGENT_ID} --limit 2"
+        timeout_seconds: 30
+        requires_approval: false
+
+      - name: Stop current version
+        action: "agent-sre agent stop --agent ${AGENT_ID} --drain-timeout 30"
+        timeout_seconds: 120
+        requires_approval: true
+        rollback_action: "agent-sre agent start --agent ${AGENT_ID}"
+
+      - name: Deploy previous version
+        action: "agent-sre deploy rollback --agent ${AGENT_ID} --to-previous"
+        timeout_seconds: 300
+        requires_approval: true
+        rollback_action: "agent-sre deploy rollback --agent ${AGENT_ID} --to-latest"
+
+      - name: Verify rollback
+        action: "agent-sre health check --agent ${AGENT_ID} --wait 60"
+        timeout_seconds: 120
+        requires_approval: false

@@ -1,0 +1,34 @@
+runbooks:
+  - id: revoke-trust
+    name: Revoke Agent Trust
+    description: >
+      Revoke trust for a compromised agent, notify peers, and trigger
+      an audit trail for forensic analysis.
+    trigger_conditions:
+      - type: trust_revocation
+      - type: policy_violation
+        severity: p1
+    labels:
+      category: security
+      risk: high
+    steps:
+      - name: Identify compromised agent
+        action: "agent-sre trust inspect --agent ${AGENT_ID}"
+        timeout_seconds: 30
+        requires_approval: false
+
+      - name: Revoke trust score
+        action: "agent-sre trust revoke --agent ${AGENT_ID} --reason incident"
+        timeout_seconds: 30
+        requires_approval: true
+        rollback_action: "agent-sre trust restore --agent ${AGENT_ID}"
+
+      - name: Notify peers
+        action: "agent-sre fleet notify --exclude ${AGENT_ID} --message 'Trust revoked for ${AGENT_ID}'"
+        timeout_seconds: 60
+        requires_approval: false
+
+      - name: Audit compromised agent
+        action: "agent-sre audit generate --agent ${AGENT_ID} --depth full"
+        timeout_seconds: 300
+        requires_approval: false
