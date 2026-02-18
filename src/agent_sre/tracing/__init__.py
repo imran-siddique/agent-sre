@@ -5,6 +5,12 @@ Extends the replay trace model with protocol-level context propagation,
 enabling end-to-end visibility across agent-to-agent (A2A) and
 model-context-protocol (MCP) boundaries.
 
+Also provides OpenTelemetry native export with agent semantic conventions:
+- conventions: Custom attribute names and span kind constants
+- spans: Helpers to create attributed OTel spans
+- metrics: Agent-specific metric instruments
+- exporters: OTLP gRPC/HTTP and console exporter setup
+
 Components:
 - ProtocolSpan: Enriched span with protocol metadata (A2A task IDs, MCP request IDs)
 - TraceContext: W3C-style context propagation for cross-agent traces
@@ -689,3 +695,88 @@ class ProtocolTracer:
     def protocol_spans(self) -> List[ProtocolSpan]:
         """All protocol spans recorded so far."""
         return list(self._protocol_spans)
+
+
+# ---------------------------------------------------------------------------
+# OpenTelemetry native export — public API re-exports
+# ---------------------------------------------------------------------------
+
+from agent_sre.tracing.conventions import (  # noqa: E402
+    AGENT_DELEGATION_FROM,
+    AGENT_DELEGATION_TO,
+    AGENT_DID,
+    AGENT_MODEL_NAME,
+    AGENT_MODEL_PROVIDER,
+    AGENT_POLICY_DECISION,
+    AGENT_POLICY_NAME,
+    AGENT_TASK,
+    AGENT_TASK_NAME,
+    AGENT_TASK_SUCCESS,
+    AGENT_TOOL_NAME,
+    AGENT_TOOL_RESULT,
+    AGENT_TRUST_SCORE,
+    DELEGATION,
+    LLM_INFERENCE,
+    POLICY_CHECK,
+    TOOL_CALL,
+)
+from agent_sre.tracing.exporters import (  # noqa: E402
+    configure_console_exporter,
+    configure_otlp_grpc,
+    configure_otlp_http,
+)
+from agent_sre.tracing.metrics import (  # noqa: E402
+    AgentMetrics,
+    create_agent_metrics,
+)
+from agent_sre.tracing.spans import (  # noqa: E402
+    start_agent_task_span,
+    start_delegation_span,
+    start_llm_inference_span,
+    start_policy_check_span,
+    start_tool_call_span,
+)
+
+__all__ = [
+    # Conventions — attributes
+    "AGENT_DID",
+    "AGENT_TRUST_SCORE",
+    "AGENT_TASK_SUCCESS",
+    "AGENT_TASK_NAME",
+    "AGENT_TOOL_NAME",
+    "AGENT_TOOL_RESULT",
+    "AGENT_MODEL_NAME",
+    "AGENT_MODEL_PROVIDER",
+    "AGENT_DELEGATION_FROM",
+    "AGENT_DELEGATION_TO",
+    "AGENT_POLICY_NAME",
+    "AGENT_POLICY_DECISION",
+    # Conventions — span kinds
+    "AGENT_TASK",
+    "TOOL_CALL",
+    "LLM_INFERENCE",
+    "DELEGATION",
+    "POLICY_CHECK",
+    # Span helpers
+    "start_agent_task_span",
+    "start_tool_call_span",
+    "start_llm_inference_span",
+    "start_delegation_span",
+    "start_policy_check_span",
+    # Metrics
+    "AgentMetrics",
+    "create_agent_metrics",
+    # Exporters
+    "configure_otlp_grpc",
+    "configure_otlp_http",
+    "configure_console_exporter",
+    # Protocol tracing (existing)
+    "ProtocolType",
+    "SpanRole",
+    "TraceContext",
+    "SpanLink",
+    "ProtocolSpan",
+    "ProtocolTimelineEntry",
+    "TracingReport",
+    "ProtocolTracer",
+]
