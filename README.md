@@ -35,6 +35,25 @@
 
 ---
 
+## 📊 By The Numbers
+
+<table>
+<tr>
+<td align="center"><h3>7</h3><sub>SRE Engines</sub></td>
+<td align="center"><h3>9</h3><sub>Chaos Fault Templates</sub></td>
+<td align="center"><h3>7</h3><sub>SLI Types</sub></td>
+<td align="center"><h3>100%</h3><sub>Test Coverage<br/>on Core Engines</sub></td>
+</tr>
+</table>
+
+### 💡 Why Agent SRE?
+
+> **AI agents fail differently than traditional services.** They hallucinate, exceed cost budgets, and degrade gradually rather than crash. Traditional SRE tools don't understand agent-specific failure modes. Agent SRE brings SLOs, error budgets, chaos testing, and progressive delivery to the AI agent world.
+
+**Built for the $47B AI agent market** — the reliability layer that makes autonomous agents production-ready.
+
+---
+
 ## ⚡ Quick Start in 30 Seconds
 
 ```bash
@@ -501,6 +520,15 @@ pytest
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## 🗺️ Roadmap
+
+| Quarter | Milestone |
+|---------|-----------|
+| **Q1 2026** | ✅ Core 7 engines, OTel integration, Prometheus dashboards |
+| **Q2 2026** | Kubernetes operator, PagerDuty/OpsGenie integration |
+| **Q3 2026** | ML-powered anomaly detection, auto-remediation |
+| **Q4 2026** | Managed cloud service, SOC2 compliance automation |
 
 ## License
 
