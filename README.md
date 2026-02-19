@@ -18,7 +18,7 @@
 
 > 🔗 **Part of the Agent Ecosystem** — Works with [Agent OS](https://github.com/imran-siddique/agent-os) (governance) and [AgentMesh](https://github.com/imran-siddique/agent-mesh) (identity & trust)
 
-[Quick Start](#-quick-start-in-30-seconds) • [Examples](examples/) • [Docs](docs/) • [Agent OS](https://github.com/imran-siddique/agent-os) • [AgentMesh](https://github.com/imran-siddique/agent-mesh)
+[Quick Start](#-quick-start-in-30-seconds) • [Examples](examples/) • [Benchmarks](benchmarks/results/BENCHMARKS.md) • [Docs](docs/) • [Agent OS](https://github.com/imran-siddique/agent-os) • [AgentMesh](https://github.com/imran-siddique/agent-mesh)
 
 </div>
 

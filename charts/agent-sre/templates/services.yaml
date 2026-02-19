@@ -1,0 +1,27 @@
+{{- $components := list "slo-engine" "chaos-engine" "delivery-controller" "cost-guard" "incident-manager" }}
+{{- range $name := $components }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "agent-sre.fullname" $ }}-{{ $name }}
+  labels:
+    {{- include "agent-sre.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+spec:
+  type: {{ $.Values.service.type }}
+  ports:
+    - port: {{ $.Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    {{- if $.Values.monitoring.prometheus.enabled }}
+    - port: {{ $.Values.monitoring.prometheus.port }}
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+    {{- end }}
+  selector:
+    {{- include "agent-sre.selectorLabels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+{{- end }}
