@@ -60,6 +60,8 @@ class AgentOSBridge:
         self._events_processed = 0
         self._blocked_count = 0
         self._warning_count = 0
+        self._cmvk_review_count = 0
+        self._events_by_agent: dict[str, int] = {}
 
     @property
     def policy_sli(self) -> PolicyComplianceSLI:
@@ -68,6 +70,7 @@ class AgentOSBridge:
     def process_audit_entry(self, entry: AuditLogEntry) -> Signal | None:
         """Process an Agent OS audit log entry and return a Signal if relevant."""
         self._events_processed += 1
+        self._events_by_agent[entry.agent_id] = self._events_by_agent.get(entry.agent_id, 0) + 1
 
         if entry.entry_type == "blocked":
             self._blocked_count += 1
@@ -86,8 +89,28 @@ class AgentOSBridge:
 
         if entry.entry_type == "allowed":
             self._policy_sli.record_check(True, entry.policy_name)
+            return None
+
+        if entry.entry_type == "cmvk_review":
+            self._cmvk_review_count += 1
+            outcome = entry.details.get("review_outcome", "pending")
+            if outcome == "rejected":
+                self._policy_sli.record_check(False, "cmvk_review")
+                return Signal(
+                    signal_type=SignalType.POLICY_VIOLATION,
+                    source=entry.agent_id,
+                    message=f"CMVK review rejected for {entry.agent_id}: {entry.action}",
+                    metadata={**entry.details, "cmvk": True},
+                )
+            # Approved reviews count as compliant
+            self._policy_sli.record_check(True, "cmvk_review")
+            return None
 
         return None
+
+    def get_agent_violation_count(self, agent_id: str) -> int:
+        """Get number of events processed for a specific agent."""
+        return self._events_by_agent.get(agent_id, 0)
 
     def slis(self) -> list[SLI]:
         return [self._policy_sli]
@@ -97,5 +120,7 @@ class AgentOSBridge:
             "events_processed": self._events_processed,
             "blocked_count": self._blocked_count,
             "warning_count": self._warning_count,
+            "cmvk_review_count": self._cmvk_review_count,
             "policy_compliance": self._policy_sli.current_value(),
+            "agents_seen": len(self._events_by_agent),
         }

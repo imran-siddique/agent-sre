@@ -76,6 +76,8 @@ class AgentMeshBridge:
         self._trust_sli = TrustScoreSLI()
         self._handshake_sli = HandshakeSuccessRateSLI()
         self._events_processed = 0
+        self._events_by_type: dict[str, int] = {}
+        self._agent_trust_cache: dict[str, int] = {}
 
     @property
     def trust_sli(self) -> TrustScoreSLI:
@@ -88,8 +90,10 @@ class AgentMeshBridge:
     def process_event(self, event: MeshEvent) -> Signal | None:
         """Process an Agent Mesh event and return a Signal if relevant."""
         self._events_processed += 1
+        self._events_by_type[event.event_type] = self._events_by_type.get(event.event_type, 0) + 1
 
         if event.event_type == "trust_revocation":
+            self._agent_trust_cache[event.agent_did] = 0
             return Signal(
                 signal_type=SignalType.TRUST_REVOCATION,
                 source=event.agent_did,
@@ -105,7 +109,28 @@ class AgentMeshBridge:
                 metadata=event.details,
             )
 
+        if event.event_type == "credential_rotation":
+            # Track rotation for operational visibility — not an incident
+            return None
+
+        if event.event_type == "trust_update":
+            score = event.details.get("score", 500)
+            self._trust_sli.record_trust(score, event.agent_did)
+            self._agent_trust_cache[event.agent_did] = score
+            return None
+
+        if event.event_type == "handshake":
+            success = event.details.get("success", True)
+            self._handshake_sli.record_handshake(
+                success, {"agent_did": event.agent_did, **event.details}
+            )
+            return None
+
         return None
+
+    def get_agent_trust(self, agent_did: str) -> int | None:
+        """Get last known trust score for an agent."""
+        return self._agent_trust_cache.get(agent_did)
 
     def slis(self) -> list[SLI]:
         """Get all SLIs provided by this integration."""
@@ -114,6 +139,8 @@ class AgentMeshBridge:
     def summary(self) -> dict[str, Any]:
         return {
             "events_processed": self._events_processed,
+            "events_by_type": dict(self._events_by_type),
             "trust_score": self._trust_sli.current_value(),
             "handshake_rate": self._handshake_sli.current_value(),
+            "tracked_agents": len(self._agent_trust_cache),
         }

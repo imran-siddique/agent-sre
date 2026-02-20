@@ -57,6 +57,62 @@ class TestAgentMeshBridge:
         s = bridge.summary()
         assert s["events_processed"] == 1
 
+    def test_process_credential_rotation(self) -> None:
+        bridge = AgentMeshBridge()
+        event = MeshEvent(event_type="credential_rotation", agent_did="did:mesh:agent-1")
+        signal = bridge.process_event(event)
+        assert signal is None  # rotation is informational, not an incident
+
+    def test_process_trust_update(self) -> None:
+        bridge = AgentMeshBridge()
+        event = MeshEvent(
+            event_type="trust_update",
+            agent_did="did:mesh:agent-1",
+            details={"score": 750},
+        )
+        signal = bridge.process_event(event)
+        assert signal is None
+        val = bridge.trust_sli.current_value()
+        assert val is not None
+        assert abs(val - 0.75) < 0.01
+
+    def test_process_handshake_event(self) -> None:
+        bridge = AgentMeshBridge()
+        bridge.process_event(MeshEvent(
+            event_type="handshake", agent_did="did:mesh:a", details={"success": True},
+        ))
+        bridge.process_event(MeshEvent(
+            event_type="handshake", agent_did="did:mesh:b", details={"success": False},
+        ))
+        val = bridge.handshake_sli.current_value()
+        assert val is not None
+        assert val < 1.0  # at least one failure recorded
+
+    def test_agent_trust_cache(self) -> None:
+        bridge = AgentMeshBridge()
+        assert bridge.get_agent_trust("did:mesh:unknown") is None
+        bridge.process_event(MeshEvent(
+            event_type="trust_update", agent_did="did:mesh:a", details={"score": 800},
+        ))
+        assert bridge.get_agent_trust("did:mesh:a") == 800
+
+    def test_trust_revocation_clears_cache(self) -> None:
+        bridge = AgentMeshBridge()
+        bridge.process_event(MeshEvent(
+            event_type="trust_update", agent_did="did:mesh:a", details={"score": 800},
+        ))
+        bridge.process_event(MeshEvent(event_type="trust_revocation", agent_did="did:mesh:a"))
+        assert bridge.get_agent_trust("did:mesh:a") == 0
+
+    def test_events_by_type(self) -> None:
+        bridge = AgentMeshBridge()
+        bridge.process_event(MeshEvent(event_type="trust_revocation", agent_did="a"))
+        bridge.process_event(MeshEvent(event_type="trust_revocation", agent_did="b"))
+        bridge.process_event(MeshEvent(event_type="policy_violation", agent_did="c"))
+        s = bridge.summary()
+        assert s["events_by_type"]["trust_revocation"] == 2
+        assert s["events_by_type"]["policy_violation"] == 1
+
 
 class TestAgentOSBridge:
     def test_blocked_creates_signal(self) -> None:
@@ -102,3 +158,64 @@ class TestAgentOSBridge:
         assert s["events_processed"] == 2
         assert s["blocked_count"] == 1
         assert s["warning_count"] == 1
+
+    def test_cmvk_review_rejected(self) -> None:
+        bridge = AgentOSBridge()
+        entry = AuditLogEntry(
+            entry_type="cmvk_review",
+            agent_id="bot-risky",
+            action="deploy_model",
+            details={"review_outcome": "rejected", "reviewer": "human-1"},
+        )
+        signal = bridge.process_audit_entry(entry)
+        assert signal is not None
+        assert signal.signal_type == SignalType.POLICY_VIOLATION
+        assert "CMVK" in signal.message
+        assert bridge._cmvk_review_count == 1
+
+    def test_cmvk_review_approved(self) -> None:
+        bridge = AgentOSBridge()
+        entry = AuditLogEntry(
+            entry_type="cmvk_review",
+            agent_id="bot-safe",
+            action="read_data",
+            details={"review_outcome": "approved"},
+        )
+        signal = bridge.process_audit_entry(entry)
+        assert signal is None  # approved reviews don't generate signals
+        assert bridge._cmvk_review_count == 1
+        val = bridge.policy_sli.current_value()
+        assert val == 1.0
+
+    def test_cmvk_review_pending(self) -> None:
+        bridge = AgentOSBridge()
+        entry = AuditLogEntry(
+            entry_type="cmvk_review",
+            agent_id="bot-1",
+            action="execute",
+            details={},  # no review_outcome = pending
+        )
+        signal = bridge.process_audit_entry(entry)
+        assert signal is None  # pending defaults to compliant
+
+    def test_agent_event_tracking(self) -> None:
+        bridge = AgentOSBridge()
+        bridge.process_audit_entry(AuditLogEntry(entry_type="allowed", agent_id="bot-1"))
+        bridge.process_audit_entry(AuditLogEntry(entry_type="blocked", agent_id="bot-1", policy_name="p1"))
+        bridge.process_audit_entry(AuditLogEntry(entry_type="allowed", agent_id="bot-2"))
+        assert bridge.get_agent_violation_count("bot-1") == 2
+        assert bridge.get_agent_violation_count("bot-2") == 1
+        assert bridge.get_agent_violation_count("bot-3") == 0
+
+    def test_summary_with_cmvk(self) -> None:
+        bridge = AgentOSBridge()
+        bridge.process_audit_entry(AuditLogEntry(entry_type="blocked", agent_id="a", policy_name="p1"))
+        bridge.process_audit_entry(AuditLogEntry(
+            entry_type="cmvk_review", agent_id="b",
+            details={"review_outcome": "rejected"},
+        ))
+        bridge.process_audit_entry(AuditLogEntry(entry_type="allowed", agent_id="c"))
+        s = bridge.summary()
+        assert s["cmvk_review_count"] == 1
+        assert s["blocked_count"] == 1
+        assert s["agents_seen"] == 3
