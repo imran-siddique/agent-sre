@@ -16,9 +16,9 @@
 
 > ⭐ **If this project helps you, please star it!** It helps others discover Agent SRE.
 
-> 🔗 **Part of the Agent Ecosystem** — Works with [Agent OS](https://github.com/imran-siddique/agent-os) (governance) and [AgentMesh](https://github.com/imran-siddique/agent-mesh) (identity & trust)
+> 🔗 **Part of the Agent Ecosystem** — Works with [Agent OS](https://github.com/imran-siddique/agent-os) (governance), [AgentMesh](https://github.com/imran-siddique/agent-mesh) (identity & trust), and [Agent Hypervisor](https://github.com/imran-siddique/agent-hypervisor) (runtime sessions)
 
-[Quick Start](#-quick-start-in-30-seconds) • [Examples](examples/) • [Benchmarks](benchmarks/results/BENCHMARKS.md) • [Docs](docs/) • [Agent OS](https://github.com/imran-siddique/agent-os) • [AgentMesh](https://github.com/imran-siddique/agent-mesh)
+[Quick Start](#-quick-start-in-30-seconds) • [Examples](examples/) • [Benchmarks](benchmarks/results/BENCHMARKS.md) • [Docs](docs/) • [Agent OS](https://github.com/imran-siddique/agent-os) • [AgentMesh](https://github.com/imran-siddique/agent-mesh) • [Agent Hypervisor](https://github.com/imran-siddique/agent-hypervisor)
 
 </div>
 
@@ -326,6 +326,7 @@ Agent SRE completes the governance-to-reliability stack:
 | Layer | Project | What It Does |
 |---|---|---|
 | **Reliability** | **Agent SRE** (this) | SLOs, chaos testing, canary deploys, cost guard, replay |
+| **Runtime** | [Agent Hypervisor](https://github.com/imran-siddique/agent-hypervisor) | Session isolation, execution rings, saga orchestration |
 | **Networking** | [AgentMesh](https://github.com/imran-siddique/agent-mesh) | Identity, trust, routing, delegation |
 | **Kernel** | [Agent OS](https://github.com/imran-siddique/agent-os) | Policy enforcement, audit, compliance |
 
@@ -540,6 +541,6 @@ MIT — See [LICENSE](LICENSE) for details.
 
 **Observability tells you what happened. Agent SRE tells you if it was within budget.**
 
-[GitHub](https://github.com/imran-siddique/agent-sre) · [Docs](docs/) · [Agent OS](https://github.com/imran-siddique/agent-os) · [AgentMesh](https://github.com/imran-siddique/agent-mesh)
+[GitHub](https://github.com/imran-siddique/agent-sre) · [Docs](docs/) · [Agent OS](https://github.com/imran-siddique/agent-os) · [AgentMesh](https://github.com/imran-siddique/agent-mesh) · [Agent Hypervisor](https://github.com/imran-siddique/agent-hypervisor)
 
 </div>
