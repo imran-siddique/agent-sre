@@ -501,6 +501,30 @@ docker compose up api                 # REST API on port 8080
 helm install agent-sre ./deployments/helm/agent-sre
 ```
 
+### REST API
+
+Full FastAPI REST API with 27 endpoints and interactive Swagger docs:
+
+```bash
+pip install agent-sre[api]
+uvicorn agent_sre.api.server:app
+# Open http://localhost:8000/docs for Swagger UI
+```
+
+Endpoints: SLOs, Cost, Chaos, Incidents, Delivery, Health, Metrics.
+
+### Visualization Dashboard
+
+Interactive Streamlit dashboard with 5 tabs:
+
+```bash
+cd examples/dashboard
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Tabs: SLO Health | Cost Management | Chaos Engineering | Incidents | Progressive Delivery
+
 ---
 
 ## Documentation
