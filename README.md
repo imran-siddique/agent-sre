@@ -512,6 +512,22 @@ helm install agent-sre ./deployments/helm/agent-sre
 
 ---
 
+## Frequently Asked Questions
+
+**Why do AI agents need SRE?**
+AI agents in production are services that can fail, degrade, or cost too much -- just like any other service. Agent SRE applies proven Site Reliability Engineering practices (SLOs, error budgets, chaos testing, canary deploys) specifically to AI agent systems, catching reliability issues before they impact users.
+
+**How does chaos engineering work for AI agents?**
+Agent SRE injects failures like increased latency, dropped responses, corrupted outputs, and resource exhaustion at specific points in agent workflows. It measures impact on SLOs, triggers automated rollbacks when error budgets are exceeded, and provides replay debugging to analyze failure cascades.
+
+**What SLOs can I define for AI agents?**
+Agent SRE supports SLOs for response time, accuracy, cost per inference, safety compliance, and custom metrics. Each SLO has an error budget that burns down when violated. Burn rate alerts notify you before the budget is exhausted, enabling proactive intervention.
+
+**How does Agent SRE integrate with existing monitoring?**
+Agent SRE exports metrics via OpenTelemetry and Prometheus. It works alongside your existing Grafana dashboards, PagerDuty alerts, and observability stack. It's part of the [Agent Governance Ecosystem](https://github.com/imran-siddique/agent-os) with 4,310+ tests across 4 repos.
+
+---
+
 ## Contributing
 
 ```bash
