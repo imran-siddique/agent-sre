@@ -41,6 +41,7 @@ dev = [
     "ruff>=0.8",
     "mypy>=1.10",
 ]
+api = ["fastapi>=0.109.0", "uvicorn>=0.27.0"]
 otel = [
     "opentelemetry-exporter-otlp>=1.20",
 ]

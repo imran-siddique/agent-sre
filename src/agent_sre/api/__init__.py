@@ -1,11 +1,20 @@
 """
-Minimal REST API for Agent-SRE.
+REST API for Agent-SRE.
 
-Exposes SLO status, SLI values, incidents, and health information
-via HTTP endpoints. Zero external dependencies — uses Python's
-built-in ``http.server``.
+Two server implementations:
 
-Endpoints:
+1. **Minimal (zero-dependency)** — ``AgentSREServer`` / ``APIState``
+   Uses Python's built-in ``http.server``.  Suitable for embedding in
+   any agent process with no extra packages.
+
+2. **FastAPI (full-featured)** — ``create_app``
+   Requires the ``api`` extra (``pip install agent-sre[api]``).
+   Provides versioned REST endpoints for SLOs, cost, chaos, incidents,
+   and progressive delivery.  Run with::
+
+       uvicorn agent_sre.api.server:app
+
+Minimal server endpoints:
     GET  /health           — Service health check
     GET  /api/slos         — All SLOs with status and error budgets
     GET  /api/slos/{name}  — Single SLO details
@@ -15,7 +24,7 @@ Endpoints:
     GET  /api/traces       — Recent protocol traces
     GET  /api/status       — Aggregate system status
 
-Usage:
+Usage (minimal):
     from agent_sre.api import AgentSREServer, APIState
 
     state = APIState()
@@ -24,6 +33,11 @@ Usage:
 
     server = AgentSREServer(state, port=8080)
     server.serve_forever()
+
+Usage (FastAPI):
+    from agent_sre.api import create_app
+
+    app = create_app()
 """
 
 from __future__ import annotations
@@ -36,6 +50,13 @@ from typing import Any, Callable, Dict, List
 from urllib.parse import urlparse, parse_qs
 
 from agent_sre.slo.objectives import SLO, SLOStatus
+
+
+def create_app():  # type: ignore[no-untyped-def]
+    """Create the FastAPI application (requires ``agent-sre[api]`` extra)."""
+    from agent_sre.api.server import create_app as _factory
+
+    return _factory()
 
 
 # ---------------------------------------------------------------------------
