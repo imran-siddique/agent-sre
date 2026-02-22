@@ -14,6 +14,7 @@
 [![Agent-OS Compatible](https://img.shields.io/badge/agent--os-compatible-green.svg)](https://github.com/imran-siddique/agent-os)
 [![AgentMesh Compatible](https://img.shields.io/badge/agentmesh-compatible-green.svg)](https://github.com/imran-siddique/agent-mesh)
 [![Discussions](https://img.shields.io/github/discussions/imran-siddique/agent-sre)](https://github.com/imran-siddique/agent-sre/discussions)
+[![awesome-opentelemetry](https://img.shields.io/badge/awesome--opentelemetry-listed-orange)](https://github.com/magsther/awesome-opentelemetry/pull/24)
 
 > ⭐ **If this project helps you, please star it!** It helps others discover Agent SRE.
 
