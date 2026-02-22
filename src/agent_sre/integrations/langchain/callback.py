@@ -308,20 +308,22 @@ class AgentSRECallback:
     # ------------------------------------------------------------------
     # No-op handlers (required by LangChain interface)
     # ------------------------------------------------------------------
+    # Stubs required by BaseCallbackHandler — not yet wired to SLIs.
+    # ------------------------------------------------------------------
 
-    def on_text(self, text: str, **kwargs: Any) -> None:
+    def on_text(self, text: str, **kwargs: Any) -> None:  # noqa: D102
         pass
 
-    def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
+    def on_llm_new_token(self, token: str, **kwargs: Any) -> None:  # noqa: D102
         pass
 
-    def on_agent_action(self, action: Any, **kwargs: Any) -> None:
+    def on_agent_action(self, action: Any, **kwargs: Any) -> None:  # noqa: D102
         pass
 
-    def on_agent_finish(self, finish: Any, **kwargs: Any) -> None:
+    def on_agent_finish(self, finish: Any, **kwargs: Any) -> None:  # noqa: D102
         pass
 
-    def on_retry(self, retry_state: Any, **kwargs: Any) -> None:
+    def on_retry(self, retry_state: Any, **kwargs: Any) -> None:  # noqa: D102
         pass
 
     # ------------------------------------------------------------------

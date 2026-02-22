@@ -49,8 +49,8 @@ class BlueGreenConfig(BaseModel):
     """Configuration for blue-green deployment behavior."""
 
     validation_timeout_seconds: int = 60
-    drain_timeout_seconds: int = 30
-    health_check_interval_seconds: int = 5
+    drain_timeout_seconds: int = 30  # TODO: wire into drain phase of switch()
+    health_check_interval_seconds: int = 5  # TODO: wire into validation polling
     auto_rollback_on_failure: bool = True
 
 
