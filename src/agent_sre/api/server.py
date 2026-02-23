@@ -12,21 +12,11 @@ from __future__ import annotations
 
 import time
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from agent_sre.api.models import (
-    ChaosCreateRequest,
-    CostRecordRequest,
-    FaultInjectRequest,
-    IncidentResolveRequest,
-    RolloutCreateRequest,
-    SignalIngestRequest,
-    SLOCreateRequest,
-    SLOEventRequest,
-)
 from agent_sre.chaos.engine import (
     AbortCondition,
     ChaosExperiment,
@@ -44,14 +34,27 @@ from agent_sre.delivery.rollout import (
 from agent_sre.incidents.detector import (
     Incident,
     IncidentDetector,
-    IncidentSeverity,
     IncidentState,
     Signal,
     SignalType,
 )
 from agent_sre.slo.dashboard import SLODashboard
-from agent_sre.slo.indicators import SLI, SLIValue, TimeWindow
-from agent_sre.slo.objectives import ErrorBudget, SLO
+from agent_sre.slo.indicators import SLI, SLIValue
+from agent_sre.slo.objectives import SLO, ErrorBudget
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+
+    from agent_sre.api.models import (
+        ChaosCreateRequest,
+        CostRecordRequest,
+        FaultInjectRequest,
+        IncidentResolveRequest,
+        RolloutCreateRequest,
+        SignalIngestRequest,
+        SLOCreateRequest,
+        SLOEventRequest,
+    )
 
 # ---------------------------------------------------------------------------
 # In-memory stores (reset on restart)
@@ -94,7 +97,7 @@ class _APISli(SLI):
 
 
 @asynccontextmanager
-async def _lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
+async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     global _dashboard, _cost_guard, _incident_detector, _start_time
     _dashboard = SLODashboard()
     _cost_guard = CostGuard()
@@ -364,12 +367,12 @@ def create_experiment(body: ChaosCreateRequest) -> dict[str, Any]:
     for f in body.faults:
         try:
             ft = FaultType(f.fault_type)
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
                 status_code=400,
                 detail=f"Unknown fault type '{f.fault_type}'. "
                 f"Valid: {[t.value for t in FaultType]}",
-            )
+            ) from e
         faults.append(Fault(fault_type=ft, target=f.target, rate=f.rate, params=f.params))
 
     abort_conditions = [
@@ -436,8 +439,8 @@ def inject_fault(experiment_id: str, body: FaultInjectRequest) -> dict[str, Any]
         raise HTTPException(status_code=409, detail=f"Experiment is '{exp.state.value}', not running")
     try:
         ft = FaultType(body.fault_type)
-    except ValueError:
-        raise HTTPException(status_code=400, detail=f"Unknown fault type '{body.fault_type}'")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Unknown fault type '{body.fault_type}'") from e
     fault = Fault(fault_type=ft, target=body.target, rate=body.rate, params=body.params)
     exp.inject_fault(fault, applied=body.applied, details=body.details or None)
     _bump("faults_injected_total")
@@ -511,12 +514,12 @@ def ingest_signal(body: SignalIngestRequest) -> dict[str, Any]:
     det = _get_incident_detector()
     try:
         signal_type = SignalType(body.signal_type)
-    except ValueError:
+    except ValueError as e:
         raise HTTPException(
             status_code=400,
             detail=f"Unknown signal type '{body.signal_type}'. "
             f"Valid: {[t.value for t in SignalType]}",
-        )
+        ) from e
     signal = Signal(
         signal_type=signal_type,
         source=body.source,

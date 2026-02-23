@@ -46,13 +46,16 @@ import json
 import time
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Any, Callable, Dict, List
-from urllib.parse import urlparse, parse_qs
+from typing import TYPE_CHECKING, Any
+from urllib.parse import urlparse
 
 from agent_sre.slo.objectives import SLO, SLOStatus
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
-def create_app():  # type: ignore[no-untyped-def]
+
+def create_app() -> Any:
     """Create the FastAPI application (requires ``agent-sre[api]`` extra)."""
     from agent_sre.api.server import create_app as _factory
 
@@ -68,7 +71,7 @@ class CostSnapshot:
     """Point-in-time cost summary."""
 
     total_usd: float = 0.0
-    per_agent: Dict[str, float] = field(default_factory=dict)
+    per_agent: dict[str, float] = field(default_factory=dict)
     budget_usd: float | None = None
     timestamp: float = field(default_factory=time.time)
 
@@ -78,8 +81,8 @@ class CostSnapshot:
             return self.total_usd / self.budget_usd
         return None
 
-    def to_dict(self) -> Dict[str, Any]:
-        d: Dict[str, Any] = {
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
             "total_usd": self.total_usd,
             "per_agent": self.per_agent,
             "timestamp": self.timestamp,
@@ -98,11 +101,11 @@ class APIState:
     """
 
     def __init__(self) -> None:
-        self._slos: Dict[str, SLO] = {}
+        self._slos: dict[str, SLO] = {}
         self._incident_detector: Any = None
         self._cost: CostSnapshot = CostSnapshot()
-        self._trace_reports: List[Dict[str, Any]] = []
-        self._metadata: Dict[str, str] = {}
+        self._trace_reports: list[dict[str, Any]] = []
+        self._metadata: dict[str, str] = {}
         self._start_time: float = time.time()
 
     # -- SLOs --
@@ -118,7 +121,7 @@ class APIState:
     def get_slo(self, name: str) -> SLO | None:
         return self._slos.get(name)
 
-    def all_slos(self) -> Dict[str, SLO]:
+    def all_slos(self) -> dict[str, SLO]:
         return dict(self._slos)
 
     # -- Incidents --
@@ -128,13 +131,13 @@ class APIState:
         self._incident_detector = detector
 
     @property
-    def open_incidents(self) -> List[Any]:
+    def open_incidents(self) -> list[Any]:
         if self._incident_detector and hasattr(self._incident_detector, "open_incidents"):
             return list(self._incident_detector.open_incidents)
         return []
 
     @property
-    def all_incidents(self) -> List[Any]:
+    def all_incidents(self) -> list[Any]:
         if self._incident_detector and hasattr(self._incident_detector, "all_incidents"):
             return list(self._incident_detector.all_incidents)
         return []
@@ -150,7 +153,7 @@ class APIState:
 
     # -- Traces --
 
-    def add_trace_report(self, report: Dict[str, Any]) -> None:
+    def add_trace_report(self, report: dict[str, Any]) -> None:
         """Add a trace report dict (from TracingReport.to_dict())."""
         self._trace_reports.append(report)
         # Keep last 100
@@ -158,7 +161,7 @@ class APIState:
             self._trace_reports = self._trace_reports[-100:]
 
     @property
-    def trace_reports(self) -> List[Dict[str, Any]]:
+    def trace_reports(self) -> list[dict[str, Any]]:
         return list(self._trace_reports)
 
     # -- Metadata --
@@ -172,7 +175,7 @@ class APIState:
 
     # -- Aggregate status --
 
-    def system_status(self) -> Dict[str, Any]:
+    def system_status(self) -> dict[str, Any]:
         """Aggregate system health summary."""
         slo_statuses = {name: slo.evaluate().value for name, slo in self._slos.items()}
 
@@ -232,7 +235,7 @@ class _APIHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path.rstrip("/")
 
-        routes: Dict[str, Callable[[], None]] = {
+        routes: dict[str, Callable[[], None]] = {
             "/health": self._handle_health,
             "/api/status": self._handle_status,
             "/api/slos": self._handle_slos,
