@@ -145,7 +145,7 @@ class FaultInjectionEvent:
 
 @dataclass
 class ResilienceScore:
-    """Resilience score from a chaos experiment (simple pass/fail)."""
+    """Fault impact score from a chaos experiment (simple pass/fail)."""
 
     overall: float = 0.0  # 0-100
     passed: bool = False
@@ -243,7 +243,7 @@ class ChaosExperiment:
         recovery_time_ms: float = 0.0,
         cost_increase_percent: float = 0.0,
     ) -> ResilienceScore:
-        """Calculate resilience score — simple pass/fail based on success rate."""
+        """Calculate fault impact score — simple pass/fail based on success rate."""
         passed = experiment_success_rate >= (baseline_success_rate * 0.9)
         overall = (experiment_success_rate / max(baseline_success_rate, 0.001)) * 100
         overall = max(0.0, min(100.0, overall))

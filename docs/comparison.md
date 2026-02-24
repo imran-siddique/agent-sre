@@ -14,7 +14,7 @@ Agent-SRE tells you **if it's within budget** and **what to do about it**.
 | **Chaos Testing** | ❌ | ✅ Inject faults, measure resilience |
 | **Cost Guardrails** | ❌ (cost tracking only) | ✅ Per-task limits, auto-block |
 | **Incident Detection** | ❌ | ✅ SLO breach → auto-incident |
-| **Progressive Rollout** | ❌ | ✅ Shadow mode, traffic splitting |
+| **Progressive Rollout** | ❌ | ✅ Preview mode, traffic splitting |
 
 **Use both together:** LangSmith for deep trace debugging. Agent-SRE for production reliability operations.
 

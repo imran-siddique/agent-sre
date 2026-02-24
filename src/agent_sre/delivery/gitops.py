@@ -125,7 +125,7 @@ class RolloutSpec:
         candidate_version: str,
         agent_name: str = "",
     ) -> RolloutSpec:
-        """Create a default canary rollout spec."""
+        """Create a default staged rollout spec."""
         return cls(
             name=name,
             current=AgentRef(name=agent_name or name, version=current_version),

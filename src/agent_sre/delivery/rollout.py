@@ -1,7 +1,7 @@
 # Community Edition — basic implementation
 """Progressive delivery — basic blue/green deployment support.
 
-Shadow mode and canary rollouts are not available in Community Edition.
+Preview mode and staged rollouts are not available in Community Edition.
 """
 
 from __future__ import annotations
@@ -98,7 +98,7 @@ class RollbackCondition:
         return {"metric": self.metric, "threshold": self.threshold, "comparator": self.comparator}
 
 
-# --- Shadow Mode ---
+# --- Preview Mode ---
 
 
 @dataclass
@@ -200,7 +200,7 @@ class ShadowResult:
 
 
 class ShadowMode:
-    """Shadow testing — not available in Community Edition.
+    """Preview testing — not available in Community Edition.
 
     Class retained for API compatibility. Use blue/green deployment instead.
     """
@@ -217,7 +217,7 @@ class ShadowMode:
 
     def set_similarity_function(self, fn: Callable[[Any, Any], float]) -> None:
         """Set custom similarity function — not available in Community Edition."""
-        raise NotImplementedError("Shadow mode is not available in Community Edition")
+        raise NotImplementedError("Not available in Community Edition")
 
     def compare(
         self,
@@ -230,22 +230,22 @@ class ShadowMode:
         candidate_cost_usd: float = 0.0,
     ) -> ShadowComparison:
         """Record a comparison — not available in Community Edition."""
-        raise NotImplementedError("Shadow mode is not available in Community Edition")
+        raise NotImplementedError("Not available in Community Edition")
 
     @property
     def result(self) -> ShadowResult:
         return self._result
 
     def is_passing(self, min_confidence: float = 0.8) -> bool:
-        """Check if shadow results meet promotion criteria — not available in Community Edition."""
-        raise NotImplementedError("Shadow mode is not available in Community Edition")
+        """Check if preview results meet promotion criteria — not available in Community Edition."""
+        raise NotImplementedError("Not available in Community Edition")
 
     def finish(self) -> ShadowResult:
-        """Complete the shadow session — not available in Community Edition."""
-        raise NotImplementedError("Shadow mode is not available in Community Edition")
+        """Complete the preview session — not available in Community Edition."""
+        raise NotImplementedError("Not available in Community Edition")
 
 
-# --- Canary Rollout ---
+# --- Staged Rollout ---
 
 
 @dataclass
@@ -267,7 +267,7 @@ class RolloutEvent:
 
 
 class CanaryRollout:
-    """Canary rollout — not available in Community Edition.
+    """Staged rollout — not available in Community Edition.
 
     Class retained for API compatibility. Use blue/green deployment instead.
     """
@@ -307,35 +307,35 @@ class CanaryRollout:
 
     def start(self) -> None:
         """Begin the rollout — not available in Community Edition."""
-        raise NotImplementedError("Canary rollout is not available in Community Edition")
+        raise NotImplementedError("Not available in Community Edition")
 
     def advance(self) -> bool:
         """Move to the next step — not available in Community Edition."""
-        raise NotImplementedError("Canary rollout is not available in Community Edition")
+        raise NotImplementedError("Not available in Community Edition")
 
     def check_rollback(self, metrics: dict[str, float]) -> bool:
         """Check rollback conditions — not available in Community Edition."""
-        raise NotImplementedError("Canary rollout is not available in Community Edition")
+        raise NotImplementedError("Not available in Community Edition")
 
     def analyze_step(self, metrics: dict[str, float]) -> bool:
         """Check step analysis criteria — not available in Community Edition."""
-        raise NotImplementedError("Canary rollout is not available in Community Edition")
+        raise NotImplementedError("Not available in Community Edition")
 
     def rollback(self, reason: str = "") -> None:
         """Roll back — not available in Community Edition."""
-        raise NotImplementedError("Canary rollout is not available in Community Edition")
+        raise NotImplementedError("Not available in Community Edition")
 
     def pause(self) -> None:
         """Pause the rollout — not available in Community Edition."""
-        raise NotImplementedError("Canary rollout is not available in Community Edition")
+        raise NotImplementedError("Not available in Community Edition")
 
     def resume(self) -> None:
         """Resume a paused rollout — not available in Community Edition."""
-        raise NotImplementedError("Canary rollout is not available in Community Edition")
+        raise NotImplementedError("Not available in Community Edition")
 
     def promote(self) -> None:
         """Immediately promote — not available in Community Edition."""
-        raise NotImplementedError("Canary rollout is not available in Community Edition")
+        raise NotImplementedError("Not available in Community Edition")
 
     def _record_event(
         self,

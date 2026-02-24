@@ -1,4 +1,4 @@
-"""Tests for progressive delivery — shadow mode and canary rollout."""
+"""Tests for progressive delivery — preview mode and staged rollout."""
 
 import pytest
 

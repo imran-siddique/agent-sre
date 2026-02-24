@@ -79,7 +79,7 @@ class Signal:
 class ResponseAction:
     """An action taken in response to an incident."""
 
-    action_type: str  # auto_rollback, circuit_breaker, generate_postmortem, etc.
+    action_type: str  # rollback, circuit_breaker, generate_postmortem, etc.
     executed: bool = False
     result: str = ""
     timestamp: float = field(default_factory=time.time)
@@ -162,7 +162,7 @@ class IncidentDetector:
     """Detects incidents from reliability signals.
 
     Creates incidents for P1/P2 severity signals with deduplication.
-    Multi-signal correlation is not available in Community Edition.
+    Alert grouping is not available in Community Edition.
     """
 
     def __init__(
@@ -216,9 +216,9 @@ class IncidentDetector:
         return incident
 
     def _create_correlated_incident(self, signals: list[Signal]) -> Incident:
-        """Multi-signal correlation — not available in Community Edition."""
+        """Alert grouping — not available in Community Edition."""
         raise NotImplementedError(
-            "Multi-signal correlation is not available in Community Edition"
+            "Not available in Community Edition"
         )
 
     def _is_duplicate(self, signal: Signal) -> bool:
@@ -233,9 +233,9 @@ class IncidentDetector:
         return False
 
     def _find_correlated(self, signal: Signal) -> list[Signal]:
-        """Multi-signal correlation — not available in Community Edition."""
+        """Alert grouping — not available in Community Edition."""
         raise NotImplementedError(
-            "Multi-signal correlation is not available in Community Edition"
+            "Not available in Community Edition"
         )
 
     def _prune_old_signals(self) -> None:

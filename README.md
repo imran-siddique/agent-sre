@@ -197,7 +197,7 @@ store = TraceStore()
 store.save(capture.trace)
 ```
 
-Features: deterministic replay, trace diffing, counterfactual "what-if" analysis, multi-agent distributed traces, automatic PII redaction.
+Features: deterministic replay, trace diffing, trace comparison, multi-agent distributed traces, automatic PII redaction.
 
 ### 3. Progressive Delivery — Ship Agent Changes Safely
 
@@ -211,7 +211,7 @@ spec:
   strategy:
     type: canary
     steps:
-      - shadow: 100%     # Route all traffic to v4 in shadow mode
+      - shadow: 100%     # Route all traffic to v4 in preview mode
         duration: 1h
         analysis:
           - metric: task_success_rate
@@ -264,7 +264,7 @@ resilience = experiment.calculate_resilience(
     experiment_success_rate=0.88,
     recovery_time_ms=2500,
 )
-print(f"Resilience Score: {resilience.overall:.0f}/100")
+print(f"Fault Impact Score: {resilience.overall:.0f}/100")
 ```
 
 9 pre-built experiment templates: tool timeout, error storms, LLM degradation, cascading failures, cost explosions, and more.
@@ -319,7 +319,7 @@ if incident:
     print(f"🚨 {incident.severity.value}: {incident.title}")
 ```
 
-Features: signal correlation, deduplication, circuit breaker per agent, automated postmortem generation with timeline and action items.
+Features: signal correlation, deduplication, circuit breaker per agent, postmortem template generation with timeline and action items.
 
 ---
 
@@ -337,7 +337,7 @@ Agent SRE completes the governance-to-reliability stack:
 ### With Agent OS
 - Policy violations → SLO breaches (every violation counts against error budget)
 - Audit trail → Replay engine (raw data for deterministic replay)
-- Shadow mode → Progressive delivery pipeline
+- Preview mode → Progressive delivery pipeline
 
 ### With AgentMesh
 - Trust scores → SLI indicators (mesh trust becomes an SLI)
@@ -362,14 +362,14 @@ agent-sre/
 │   │   └── dashboard.py   # SLO dashboard with compliance history
 │   ├── replay/            # Deterministic capture and replay engine
 │   │   ├── capture.py     # Trace capture with PII redaction
-│   │   ├── engine.py      # Replay, diff, counterfactual analysis
+│   │   ├── engine.py      # Replay, diff, trace comparison
 │   │   ├── visualization.py  # Execution graphs, critical path
 │   │   └── distributed.py # Multi-agent trace reconstruction
 │   ├── delivery/          # Progressive delivery (shadow, canary, rollback)
-│   │   ├── rollout.py     # Shadow mode, canary rollouts, traffic splitting
+│   │   ├── rollout.py     # Preview mode, staged rollouts, traffic splitting
 │   │   └── gitops.py      # Declarative rollout specs (YAML)
 │   ├── chaos/             # Chaos engineering and fault injection
-│   │   ├── engine.py      # Experiment state machine, resilience scoring
+│   │   ├── engine.py      # Experiment state machine, fault impact scoring
 │   │   └── library.py     # 9 pre-built experiment templates
 │   ├── cost/              # Cost tracking, budgets, anomaly detection
 │   │   ├── guard.py       # Hierarchical budgets, auto-throttle, kill switch
@@ -377,7 +377,7 @@ agent-sre/
 │   ├── incidents/         # Detection, response, postmortem generation
 │   │   ├── detector.py    # Signal correlation, deduplication, routing
 │   │   ├── circuit_breaker.py  # Per-agent circuit breaker (CLOSED/OPEN/HALF_OPEN)
-│   │   └── postmortem.py  # Automated postmortem with timeline + action items
+│   │   └── postmortem.py  # Postmortem template with timeline + action items
 │   ├── integrations/      # Ecosystem bridges
 │   │   ├── agent_os/      # Agent OS policy + audit → SLI bridge
 │   │   ├── agent_mesh/    # AgentMesh trust score → SLI bridge
@@ -421,7 +421,7 @@ Agent SRE tells you *if it was within budget* and *what to do about it*.
 | **Chaos Testing** | ❌ | ✅ Inject faults, measure resilience |
 | **Cost Guardrails** | ❌ (cost tracking only) | ✅ Per-task limits, auto-throttle, kill switch |
 | **Incident Detection** | ❌ | ✅ SLO breach → auto-incident → postmortem |
-| **Progressive Rollout** | ❌ | ✅ Shadow mode, traffic splitting, rollback |
+| **Progressive Rollout** | ❌ | ✅ Preview mode, traffic splitting, rollback |
 
 **Use both together:** observability for deep trace debugging, Agent SRE for production reliability operations.
 
@@ -438,11 +438,11 @@ Agent SRE tells you *if it was within budget* and *what to do about it*.
 | Component | Status | Description |
 |---|---|---|
 | **SLO Engine** | ✅ Stable | 7 SLI types, error budgets, burn rate alerts, auto-fire to AlertManager |
-| **Replay Engine** | ✅ Stable | Capture, replay, diff, counterfactual, distributed traces |
-| **Progressive Delivery** | ✅ Stable | Shadow mode, canary rollouts, analysis gates, auto-rollback |
-| **Chaos Engine** | ✅ Stable | 9 fault templates, resilience scoring, abort conditions |
+| **Replay Engine** | ✅ Stable | Capture, replay, diff, trace comparison, distributed traces |
+| **Progressive Delivery** | ✅ Stable | Preview mode, staged rollouts, analysis gates, manual rollback |
+| **Chaos Engine** | ✅ Stable | 9 fault templates, fault impact scoring, abort conditions |
 | **Cost Guard** | ✅ Stable | Hierarchical budgets, anomaly detection, auto-throttle |
-| **Incident Manager** | ✅ Stable | Signal correlation, circuit breaker, automated postmortem |
+| **Incident Manager** | ✅ Stable | Signal correlation, circuit breaker, postmortem template |
 | **Agent OS Bridge** | ✅ Stable | Policy violations → SLI, audit entries → signals |
 | **AgentMesh Bridge** | ✅ Stable | Trust scores → SLI, mesh events → signals |
 | **OpenTelemetry** | ✅ Stable | Full span/metric export with OTEL SDK |
@@ -485,8 +485,8 @@ Agent SRE tells you *if it was within budget* and *what to do about it*.
 | [Quickstart](examples/quickstart.py) | SLO + cost + incident in one script | `python examples/quickstart.py` |
 | [LangChain Monitor](examples/langchain_monitor.py) | LangChain RAG agent with SLOs + evals | `python examples/langchain_monitor.py` |
 | [Cost Guard](examples/cost_guard.py) | Budget enforcement with throttling | `python examples/cost_guard.py` |
-| [Canary Rollout](examples/canary_rollout.py) | Shadow + canary with auto-rollback | `python examples/canary_rollout.py` |
-| [Chaos Test](examples/chaos_test.py) | Fault injection and resilience scoring | `python examples/chaos_test.py` |
+| [Canary Rollout](examples/canary_rollout.py) | Preview + staged rollout with manual rollback | `python examples/canary_rollout.py` |
+| [Chaos Test](examples/chaos_test.py) | Fault injection and fault impact scoring | `python examples/chaos_test.py` |
 
 **Docker:**
 
@@ -542,7 +542,7 @@ Tabs: SLO Health | Cost Management | Chaos Engineering | Incidents | Progressive
 ## Frequently Asked Questions
 
 **Why do AI agents need SRE?**
-AI agents in production are services that can fail, degrade, or cost too much -- just like any other service. Agent SRE applies proven Site Reliability Engineering practices (SLOs, error budgets, chaos testing, canary deploys) specifically to AI agent systems, catching reliability issues before they impact users.
+AI agents in production are services that can fail, degrade, or cost too much -- just like any other service. Agent SRE applies proven Site Reliability Engineering practices (SLOs, error budgets, chaos testing, staged rollouts) specifically to AI agent systems, catching reliability issues before they impact users.
 
 **How does chaos engineering work for AI agents?**
 Agent SRE injects failures like increased latency, dropped responses, corrupted outputs, and resource exhaustion at specific points in agent workflows. It measures impact on SLOs, triggers automated rollbacks when error budgets are exceeded, and provides replay debugging to analyze failure cascades.

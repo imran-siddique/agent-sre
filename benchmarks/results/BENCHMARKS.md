@@ -12,7 +12,7 @@
 | SLI Recording | 200,000 ops/sec | 0.005ms | 0.014ms |
 | Fault Injection | 15,000 ops/sec | 0.067ms | 0.18ms |
 | Chaos Template Init | 8,500 ops/sec | 0.12ms | 0.31ms |
-| Canary Analysis | 12,000 ops/sec | 0.083ms | 0.22ms |
+| Staged Rollout Analysis | 12,000 ops/sec | 0.083ms | 0.22ms |
 | Rollback Decision | 45,000 ops/sec | 0.022ms | 0.061ms |
 | **Full SRE Pipeline** | **7,200 ops/sec** | **0.14ms** | **0.38ms** |
 
@@ -60,6 +60,6 @@ python -m benchmarks.bench_delivery
 
 | Benchmark | Description |
 |-----------|-------------|
-| Canary Analysis | Analysis criteria evaluation (4 metrics) |
+| Staged Rollout Analysis | Analysis criteria evaluation (4 metrics) |
 | Rollback Decision | `check_rollback()` with 3 conditions |
 | Traffic Split Calc | `current_weight` + `progress_percent` computation |

@@ -107,7 +107,7 @@ class ReplayEngine:
     - Full automated replay with mocked external calls
     - Interactive step-through
     - Trace diffing (compare two executions)
-    - Counterfactual analysis (what-if with modified inputs)
+    - Trace comparison (what-if with modified inputs)
     """
 
     def __init__(self, store: TraceStore | None = None) -> None:
@@ -136,7 +136,7 @@ class ReplayEngine:
         Args:
             trace: The trace to replay.
             overrides: Optional dict mapping span names to override output_data.
-                       Used for counterfactual "what-if" analysis.
+                       Used for trace comparison.
 
         Returns:
             ReplayResult with any divergences detected.
@@ -232,7 +232,7 @@ class ReplayEngine:
         return diffs
 
     def what_if(self, trace: Trace, overrides: dict[str, dict[str, Any]]) -> ReplayResult:
-        """Counterfactual analysis — not available in Community Edition."""
+        """Trace comparison — not available in Community Edition."""
         raise NotImplementedError(
-            "Counterfactual what-if analysis is not available in Community Edition"
+            "Not available in Community Edition"
         )

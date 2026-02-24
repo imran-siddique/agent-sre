@@ -1,7 +1,7 @@
 # Community Edition — basic implementation
 """Cost optimization — basic model cost estimation and recommendation.
 
-Pareto frontier analysis and simulation are not available in Community Edition.
+Cost optimization analysis is not available in Community Edition.
 """
 
 from __future__ import annotations
@@ -50,7 +50,7 @@ class OptimizationResult(BaseModel):
 
 
 class CostOptimizer:
-    """Multi-model cost optimizer with Pareto analysis and routing.
+    """Multi-model cost optimizer with routing.
 
     Evaluates models against task profiles to find cost-optimal
     configurations that meet quality and latency constraints.
@@ -105,9 +105,9 @@ class CostOptimizer:
         )
 
     def pareto_frontier(self, task: TaskProfile) -> list[CostEstimate]:
-        """Pareto frontier analysis — not available in Community Edition."""
+        """Cost optimization — not available in Community Edition."""
         raise NotImplementedError(
-            "Pareto frontier analysis is not available in Community Edition"
+            "Not available in Community Edition"
         )
 
     def simulate(self, task: TaskProfile, model_name: str, volume: int) -> dict[str, object]:

@@ -124,7 +124,7 @@ Capture, store, and deterministically replay agent execution traces.
 | `TraceStore` | `capture.py` | Persistent JSON storage — `save()`, `load()`, `list_traces()` |
 | `ReplayEngine` | `engine.py` | Deterministic replay with diffing — `replay()`, `diff()`, `what_if()` |
 | `TraceDiff` | `engine.py` | Compares output, cost, latency, tool sequence, and spans between runs |
-| Distributed replay | `distributed.py` | Cross-agent trace replay |
+| Trace replay | `distributed.py` | Cross-agent trace replay |
 | Visualization | `visualization.py` | Trace rendering |
 
 ### Cost Guard (`src/agent_sre/cost/`)
@@ -247,7 +247,7 @@ flowchart TB
         B4 --> B5["Compare:<br/>output · cost · latency<br/>tool sequence · spans"]
     end
 
-    subgraph "what_if Analysis"
+    subgraph "Trace Comparison"
         B1 --> C1["what_if()<br/>modified replay"]
         C1 --> B3
     end

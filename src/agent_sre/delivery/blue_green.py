@@ -2,7 +2,7 @@
 """Blue-green deployment strategy for AI agents.
 
 Manages dual-environment deployments with deploy, validate, switch, and rollback
-lifecycle. Supports health checks and auto-rollback on validation failure.
+lifecycle. Supports health checks and rollback on validation failure.
 """
 
 from __future__ import annotations

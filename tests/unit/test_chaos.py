@@ -104,7 +104,7 @@ class TestChaosExperiment:
         assert exp.state == ExperimentState.COMPLETED
         assert exp.ended_at is not None
 
-    def test_resilience_score(self) -> None:
+    def test_fault_impact_score(self) -> None:
         exp = ChaosExperiment(name="test", target_agent="bot", faults=[])
         exp.start()
         score = exp.calculate_resilience(

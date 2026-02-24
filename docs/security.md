@@ -20,7 +20,7 @@ threat model, and best practices.
 | **Tool drift** | Schema fingerprinting detects MCP server changes | MCP Drift Detection |
 | **Unsafe outputs** | LLM-as-Judge safety evaluation | Evaluation Engine |
 | **Hallucination** | Rules-based + LLM-as-Judge hallucination detection | Evaluation Engine |
-| **Uncontrolled deployment** | Canary rollouts with automatic rollback | Progressive Delivery |
+| **Uncontrolled deployment** | Staged rollouts with manual rollback | Progressive Delivery |
 
 ### What Agent-SRE Does NOT Protect Against
 

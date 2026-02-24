@@ -69,7 +69,7 @@ if should_abort:
 else:
     print("\n✅ Agent is handling faults gracefully")
 
-    # Calculate resilience score
+    # Calculate fault impact score
     resilience = experiment.calculate_resilience(
         baseline_success_rate=0.98,
         experiment_success_rate=0.88,
@@ -79,7 +79,7 @@ else:
 
     experiment.complete(resilience=resilience)
 
-    print(f"\nResilience Score: {resilience.overall:.0f}/100")
+    print(f"\nFault Impact Score: {resilience.overall:.0f}/100")
     print(f"  Fault Tolerance:    {resilience.fault_tolerance:.1%}")
     print(f"  Recovery Time:      {resilience.recovery_time_ms:.0f}ms")
     print(f"  Degradation:        {resilience.degradation_percent:.1f}%")

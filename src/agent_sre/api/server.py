@@ -408,7 +408,7 @@ def list_experiments(
 
 @app.get("/api/v1/chaos/experiments/{experiment_id}", tags=["chaos"])
 def get_experiment(experiment_id: str) -> dict[str, Any]:
-    """Get experiment details including resilience score."""
+    """Get experiment details including fault impact score."""
     exp = _experiments.get(experiment_id)
     if exp is None:
         raise HTTPException(status_code=404, detail=f"Experiment '{experiment_id}' not found")
@@ -544,7 +544,7 @@ def ingest_signal(body: SignalIngestRequest) -> dict[str, Any]:
 
 @app.post("/api/v1/rollouts", tags=["delivery"], status_code=201)
 def create_rollout(body: RolloutCreateRequest) -> dict[str, Any]:
-    """Create a canary rollout."""
+    """Create a staged rollout."""
     steps = [
         RolloutStep(name=s.name, weight=s.weight, duration_seconds=s.duration_seconds, manual_gate=s.manual_gate)
         for s in body.steps

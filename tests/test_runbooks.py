@@ -1,4 +1,4 @@
-"""Tests for runbook automation — models, executor, registry, and YAML loading."""
+"""Tests for runbook reference — models, executor, registry, and YAML loading."""
 
 from __future__ import annotations
 

@@ -70,6 +70,6 @@ class ChaosScheduler:
         self._executions.setdefault(execution.schedule_id, []).append(execution)
 
     def get_resilience_trend(self, schedule_id: str, window: int = 10) -> list[float]:
-        """Return the last N resilience scores for a schedule."""
+        """Return the last N fault impact scores for a schedule."""
         history = self._executions.get(schedule_id, [])
         return [ex.resilience_score for ex in history[-window:]]

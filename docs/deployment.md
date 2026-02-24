@@ -159,7 +159,7 @@ if report.has_drift:
 - [ ] Enable MCP drift detection for all MCP servers
 - [ ] Set up LLM-as-Judge evaluation for correctness/hallucination
 - [ ] Run chaos experiments before deploying new agent versions
-- [ ] Use canary rollouts for agent version updates
+- [ ] Use staged rollouts for agent version updates
 - [ ] Export metrics to your observability platform (OTEL, Langfuse, Arize)
 
 ---

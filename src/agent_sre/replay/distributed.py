@@ -1,5 +1,5 @@
 # Community Edition — basic implementation
-"""Distributed replay — not available in Community Edition.
+"""Trace replay — not available in Community Edition.
 
 Classes are retained for API compatibility. Use the local ReplayEngine instead.
 """
@@ -16,7 +16,7 @@ from agent_sre.replay.engine import ReplayResult, TraceDiff, DiffType
 
 
 class MeshReplayState(Enum):
-    """State of a distributed replay session."""
+    """State of a trace replay session."""
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -137,19 +137,19 @@ class DistributedReplayEngine:
     def discover_links(self) -> list[DelegationLink]:
         """Auto-discover delegation links — not available in Community Edition."""
         raise NotImplementedError(
-            "Distributed replay is not available in Community Edition"
+            "Not available in Community Edition"
         )
 
     def replay(self) -> DistributedReplayResult:
         """Replay all agent traces — not available in Community Edition."""
         raise NotImplementedError(
-            "Distributed replay is not available in Community Edition"
+            "Not available in Community Edition"
         )
 
     def _check_cross_agent(self, result: DistributedReplayResult) -> list[TraceDiff]:
         """Check consistency across delegation boundaries — not available in Community Edition."""
         raise NotImplementedError(
-            "Distributed replay is not available in Community Edition"
+            "Not available in Community Edition"
         )
 
     def execution_order(self) -> list[str]:

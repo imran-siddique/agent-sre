@@ -1,1 +1,1 @@
-"""Agent OS integration — policy signals and shadow mode."""
+"""Agent OS integration — policy signals and preview mode."""

@@ -1,5 +1,5 @@
 """
-Canary Rollout Example — Safely deploy a new agent version.
+Staged Rollout Example — Safely deploy a new agent version.
 
 Compares agent v1 vs v2 decision quality using golden test cases,
 with automatic rollback if the new version performs worse.
@@ -55,7 +55,7 @@ def evaluate_agent_version(version: str, n_tasks: int = 50) -> dict[str, float]:
         }
 
 
-print("Canary Rollout Example")
+print("Staged Rollout Example")
 print("=" * 60)
 print()
 
@@ -87,7 +87,7 @@ while rollout.current_step is not None:
     if should_rollback:
         rollout.rollback(reason="Canary metrics breached rollback thresholds")
         print()
-        print(f"  🛑 AUTO-ROLLBACK triggered!")
+        print(f"  🛑 ROLLBACK triggered!")
         print(f"     Reason: hallucination_rate {metrics['hallucination_rate']:.1%} >= 8% threshold")
         break
 

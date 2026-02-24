@@ -566,7 +566,7 @@ with tab_chaos:
                 ec2.metric("Duration", f"{exp['duration_s']}s")
                 ec3.metric("Faults", exp["faults_injected"])
                 if exp["resilience"]["overall"] > 0:
-                    st.metric("Resilience Score", f"{exp['resilience']['overall']}%")
+                    st.metric("Fault Impact Score", f"{exp['resilience']['overall']}%")
 
     with right:
         st.subheader("Resilience Radar")

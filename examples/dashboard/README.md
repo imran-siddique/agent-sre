@@ -22,7 +22,7 @@ The dashboard opens at `http://localhost:8501` and works standalone with simulat
 | **Cost Management** | Per-agent budgets, cost trends, alerts, top spenders |
 | **Chaos Engineering** | Experiments, resilience radar, fault injection timeline |
 | **Incidents** | Active incidents by severity, MTTR, signal correlation |
-| **Progressive Delivery** | Canary rollout progress, shadow test match rates |
+| **Progressive Delivery** | Staged rollout progress, preview test match rates |
 
 ## Configuration
 

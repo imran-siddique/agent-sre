@@ -1,4 +1,4 @@
-"""Progressive Delivery — Shadow testing, canary rollouts, automated rollback."""
+"""Progressive Delivery — Preview testing, staged rollouts, manual rollback."""
 
 from agent_sre.delivery.blue_green import (
     AgentEnvironment,

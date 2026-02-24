@@ -1,9 +1,9 @@
-"""Agent OS integration — policy signals and shadow mode hooks.
+"""Agent OS integration — policy signals and preview mode hooks.
 
 Connects to Agent OS's governance layer:
 - Policy violations → SLO breaches (100% compliance SLO)
 - Audit log → trace capture feed for replay
-- Shadow mode → progressive delivery shadow step
+- Preview mode → progressive delivery preview step
 - Policy review events → incident context
 """
 

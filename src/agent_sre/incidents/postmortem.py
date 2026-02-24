@@ -1,7 +1,7 @@
 # Community Edition — basic implementation
 """Postmortem data models — basic incident summary.
 
-Automated postmortem generation is not available in Community Edition.
+Postmortem template generation is not available in Community Edition.
 """
 
 from __future__ import annotations
@@ -64,7 +64,7 @@ class ActionItem:
 
 @dataclass
 class Postmortem:
-    """An automated postmortem document."""
+    """A postmortem template document."""
     postmortem_id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
     incident_id: str = ""
     title: str = ""
@@ -187,7 +187,7 @@ class PostmortemGenerator:
     def generate(self, incident: Incident) -> Postmortem:
         """Generate postmortem — not available in Community Edition."""
         raise NotImplementedError(
-            "Automated postmortem generation is not available in Community Edition"
+            "Not available in Community Edition"
         )
 
     def _build_summary(self, incident: Incident) -> str:
@@ -273,7 +273,7 @@ class PostmortemGenerator:
         if not incident.actions:
             lessons.append("No automated responses were triggered — evaluate adding auto-remediation.")
         if incident.duration_seconds > 300:
-            lessons.append("Time-to-resolution exceeded 5 minutes — consider faster detection or auto-rollback.")
+            lessons.append("Time-to-resolution exceeded 5 minutes — consider faster detection or manual rollback.")
         return lessons
 
     def _identify_factors(self, incident: Incident) -> list[str]:

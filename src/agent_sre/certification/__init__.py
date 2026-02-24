@@ -228,7 +228,7 @@ def _default_criteria() -> List[Criterion]:
     ))
     criteria.append(Criterion(
         name="postmortem-process",
-        description="Automated postmortem generation for incidents",
+        description="Postmortem template generation for incidents",
         tier=CertificationTier.GOLD,
         evidence_key="has_postmortem",
         check_fn=lambda e: bool(e.get("has_postmortem", False)),

@@ -77,7 +77,7 @@ Your Agent Code
 Agent-SRE (this library)
     ├── SLO Engine        — "Is my agent reliable enough?"
     ├── Cost Guard        — "Is my agent too expensive?"
-    ├── Canary Rollout    — "Is agent v2 better than v1?"
+    ├── Staged Rollout    — "Is agent v2 better than v1?"
     ├── Chaos Engine      — "What happens when tools fail?"
     ├── Replay Engine     — "What exactly happened 3 hours ago?"
     └── Incident Detector — "Something went wrong, what do we do?"

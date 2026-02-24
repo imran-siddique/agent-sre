@@ -136,7 +136,7 @@ class IncidentResolveRequest(BaseModel):
 
 
 class RolloutStepRequest(BaseModel):
-    """A step in a canary rollout."""
+    """A step in a staged rollout."""
 
     name: str = ""
     weight: float = Field(..., ge=0.0, le=1.0)
@@ -153,7 +153,7 @@ class RollbackConditionRequest(BaseModel):
 
 
 class RolloutCreateRequest(BaseModel):
-    """Create a canary rollout."""
+    """Create a staged rollout."""
 
     name: str
     steps: list[RolloutStepRequest] = Field(default_factory=list)

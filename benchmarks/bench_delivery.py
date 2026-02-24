@@ -1,7 +1,7 @@
 """Performance benchmarks for Progressive Delivery.
 
 Measures throughput and latency of:
-- Canary analysis (step analysis criteria evaluation)
+- Staged rollout analysis (step analysis criteria evaluation)
 - Rollback decision checks
 - Traffic split calculation
 """
@@ -83,7 +83,7 @@ def bench_canary_analysis(iterations: int = 10_000) -> BenchResult:
             c.evaluate(metrics.get(c.metric, 0.0))
 
     result = _timed_loop(_analyze, iterations)
-    result.name = "Canary Analysis"
+    result.name = "Staged Rollout Analysis"
     return result
 
 

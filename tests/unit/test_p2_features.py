@@ -1,4 +1,4 @@
-"""Tests for P2 features: distributed replay, gitops, chaos library, cost anomaly, postmortems."""
+"""Tests for P2 features: trace replay, gitops, chaos library, cost anomaly, postmortems."""
 
 import pytest
 
@@ -11,7 +11,7 @@ from agent_sre.replay.distributed import DistributedReplayEngine, MeshReplayStat
 from agent_sre.replay.capture import Span, SpanKind, Trace
 
 
-# --- Distributed Replay ---
+# --- Trace Replay ---
 
 class TestDistributedReplay:
     def _make_trace(self, agent_id, trace_id="t1"):

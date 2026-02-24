@@ -231,7 +231,7 @@ class TestMetricsExporter:
         assert "agent.sre.incidents.open" in metric_names
 
     def test_record_resilience(self, metrics_exporter, metric_reader):
-        """Resilience score is recorded as gauge."""
+        """Fault impact score is recorded as gauge."""
         metrics_exporter.record_resilience(
             experiment_name="tool-failure-test",
             score=85.0,
@@ -573,7 +573,7 @@ class TestEventLogger:
         assert result["agent.sre.chaos.fault_applied"] is True
 
     def test_log_chaos_completed(self, event_logger):
-        """Chaos experiment completions include resilience score."""
+        """Chaos experiment completions include fault impact score."""
         result = event_logger.log_chaos_completed(
             experiment_name="tool-failure-test",
             resilience_score=85.0,

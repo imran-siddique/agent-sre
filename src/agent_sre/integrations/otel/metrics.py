@@ -129,7 +129,7 @@ class MetricsExporter:
         self._resilience_score = self._meter.create_gauge(
             METRIC_RESILIENCE_SCORE,
             unit="1",
-            description="Chaos experiment resilience score (0-100)",
+            description="Chaos experiment fault impact score (0-100)",
         )
 
     def record_sli(
@@ -269,11 +269,11 @@ class MetricsExporter:
         score: float,
         agent_id: str | None = None,
     ) -> None:
-        """Record a resilience score from a chaos experiment.
+        """Record a fault impact score from a chaos experiment.
 
         Args:
             experiment_name: Name of the chaos experiment
-            score: Resilience score (0-100)
+            score: Fault impact score (0-100)
             agent_id: Target agent identifier
         """
         attrs: dict[str, Any] = {"agent.sre.chaos.experiment_name": experiment_name}

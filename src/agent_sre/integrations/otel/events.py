@@ -303,7 +303,7 @@ class EventLogger:
 
         Args:
             experiment_name: Name of the experiment
-            resilience_score: Final resilience score (0-100)
+            resilience_score: Final fault impact score (0-100)
             agent_id: Target agent identifier
         """
         attrs: dict[str, Any] = {
