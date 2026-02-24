@@ -1,0 +1,59 @@
+# Chaos Experiment Schedules
+# Cron expressions: minute hour day-of-month month day-of-week
+
+schedules:
+  - id: weekday-tool-timeout
+    name: "Weekday Tool Timeout Test"
+    experiment_id: tool-timeout
+    cron_expression: "0 9 * * 1-5"
+    enabled: true
+    blackout_windows:
+      - start: "00:00"
+        end: "06:00"
+        reason: "No experiments during overnight maintenance"
+      - start: "17:00"
+        end: "23:59"
+        reason: "No experiments outside business hours"
+    progressive_config:
+      initial_severity: 0.2
+      max_severity: 0.8
+      step_increase: 0.1
+      increase_after_success_count: 3
+    labels:
+      team: platform
+      env: staging
+
+  - id: weekly-cascading-failure
+    name: "Weekly Cascading Failure Drill"
+    experiment_id: cascading-failure
+    cron_expression: "0 14 * * 3"
+    enabled: true
+    blackout_windows:
+      - start: "00:00"
+        end: "08:00"
+        reason: "No experiments overnight"
+    progressive_config:
+      initial_severity: 0.1
+      max_severity: 0.6
+      step_increase: 0.05
+      increase_after_success_count: 2
+    labels:
+      team: reliability
+      env: staging
+
+  - id: daily-llm-latency
+    name: "Daily LLM Latency Check"
+    experiment_id: llm-latency-spike
+    cron_expression: "30 10 * * *"
+    enabled: true
+    labels:
+      team: ml-ops
+      env: production
+
+  - id: disabled-cost-test
+    name: "Cost Explosion (Disabled)"
+    experiment_id: cost-explosion
+    cron_expression: "0 12 * * 1"
+    enabled: false
+    labels:
+      team: finops

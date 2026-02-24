@@ -1,0 +1,43 @@
+# Critical Agent SLO
+# ===========================
+# Tighter SLO for mission-critical agents: 99.9% availability, 2s latency.
+# Inherits from the base SLO and overrides target + SLI threshold.
+
+name: critical-agent-slo
+description: >
+  Tighter SLO for mission-critical agents handling sensitive operations.
+  Requires higher availability and lower latency than the base SLO.
+service: critical-agent
+inherits_from: base-agent-slo
+
+sli:
+  metric: agent_task_success_ratio
+  threshold: 0.999
+  comparison: gte
+
+target: 99.9
+window: 30d
+
+error_budget_policy:
+  burn_rate_thresholds:
+    - name: slow_burn
+      rate: 1.5
+      severity: warning
+      window_seconds: 21600
+    - name: fast_burn
+      rate: 5.0
+      severity: critical
+      window_seconds: 3600
+    - name: emergency_burn
+      rate: 14.4
+      severity: page
+      window_seconds: 300
+
+labels:
+  tier: critical
+  compliance: soc2
+
+metadata:
+  owner: reliability-team
+  latency_p95_ms: 2000
+  escalation_channel: "#critical-incidents"

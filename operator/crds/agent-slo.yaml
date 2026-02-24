@@ -1,0 +1,64 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: agentslos.sre.agent-os.dev
+spec:
+  group: sre.agent-os.dev
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                agentId:
+                  type: string
+                target:
+                  type: number
+                indicators:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      target:
+                        type: number
+                errorBudget:
+                  type: object
+                  properties:
+                    windowDays:
+                      type: integer
+                    burnRateAlert:
+                      type: number
+                    burnRateCritical:
+                      type: number
+            status:
+              type: object
+              properties:
+                health:
+                  type: string
+                budgetRemaining:
+                  type: number
+                lastEvaluated:
+                  type: string
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Health
+          type: string
+          jsonPath: .status.health
+        - name: Budget
+          type: number
+          jsonPath: .status.budgetRemaining
+  scope: Namespaced
+  names:
+    plural: agentslos
+    singular: agentslo
+    kind: AgentSLO
+    shortNames:
+      - aslo

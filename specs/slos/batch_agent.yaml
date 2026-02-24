@@ -1,0 +1,39 @@
+# Batch Agent SLO
+# ===========================
+# Looser SLO for batch/background processing agents.
+# 95% availability, 30s latency — prioritizes throughput over speed.
+
+name: batch-agent-slo
+description: >
+  Relaxed SLO for batch processing agents that run asynchronously.
+  Trades latency and availability for throughput and cost efficiency.
+service: batch-agent
+inherits_from: base-agent-slo
+
+sli:
+  metric: agent_batch_success_ratio
+  threshold: 0.95
+  comparison: gte
+
+target: 95.0
+window: 7d
+
+error_budget_policy:
+  burn_rate_thresholds:
+    - name: slow_burn
+      rate: 3.0
+      severity: warning
+      window_seconds: 43200
+    - name: fast_burn
+      rate: 14.4
+      severity: critical
+      window_seconds: 3600
+
+labels:
+  tier: batch
+  domain: data-processing
+
+metadata:
+  owner: data-team
+  latency_p95_ms: 30000
+  retry_enabled: true

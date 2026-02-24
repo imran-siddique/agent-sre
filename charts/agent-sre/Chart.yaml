@@ -1,0 +1,20 @@
+apiVersion: v2
+name: agent-sre
+description: Reliability Engineering for AI Agent Systems — SLOs, Chaos Testing, Progressive Delivery
+type: application
+version: 0.3.0
+appVersion: "0.3.0"
+keywords:
+  - ai
+  - agents
+  - sre
+  - reliability
+  - observability
+  - slo
+  - chaos-engineering
+  - progressive-delivery
+home: https://github.com/imran-siddique/agent-sre
+sources:
+  - https://github.com/imran-siddique/agent-sre
+maintainers:
+  - name: Imran Siddique

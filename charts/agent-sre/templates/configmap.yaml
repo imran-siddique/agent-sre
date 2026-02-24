@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "agent-sre.fullname" . }}-config
+  labels:
+    {{- include "agent-sre.labels" . | nindent 4 }}
+data:
+  SERVICE_PORT: {{ .Values.service.port | quote }}
+  {{- if .Values.monitoring.prometheus.enabled }}
+  PROMETHEUS_ENABLED: "true"
+  PROMETHEUS_PORT: {{ .Values.monitoring.prometheus.port | quote }}
+  PROMETHEUS_SCRAPE_INTERVAL: {{ .Values.monitoring.prometheus.scrapeInterval | quote }}
+  {{- end }}
+  {{- if .Values.monitoring.grafana.enabled }}
+  GRAFANA_ENABLED: "true"
+  GRAFANA_DASHBOARDS: {{ .Values.monitoring.grafana.dashboards | quote }}
+  {{- end }}

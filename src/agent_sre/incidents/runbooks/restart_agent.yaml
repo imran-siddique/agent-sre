@@ -1,0 +1,34 @@
+runbooks:
+  - id: restart-agent
+    name: Restart Agent
+    description: >
+      Restart an unhealthy agent after capturing its current state.
+      Verifies health before and after restart.
+    trigger_conditions:
+      - type: tool_failure_spike
+      - type: latency_spike
+        severity: p2
+    labels:
+      category: remediation
+      risk: low
+    steps:
+      - name: Check agent health
+        action: "agent-sre health check --agent ${AGENT_ID}"
+        timeout_seconds: 30
+        requires_approval: false
+
+      - name: Capture agent state
+        action: "agent-sre state snapshot --agent ${AGENT_ID} --output /tmp/snapshot.json"
+        timeout_seconds: 60
+        requires_approval: false
+
+      - name: Restart agent
+        action: "agent-sre agent restart --agent ${AGENT_ID} --graceful"
+        timeout_seconds: 120
+        requires_approval: true
+        rollback_action: "agent-sre state restore --agent ${AGENT_ID} --input /tmp/snapshot.json"
+
+      - name: Verify health post-restart
+        action: "agent-sre health check --agent ${AGENT_ID} --wait 30"
+        timeout_seconds: 60
+        requires_approval: false

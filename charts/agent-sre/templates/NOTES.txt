@@ -1,0 +1,21 @@
+Agent SRE has been installed.
+
+Components deployed:
+  - SLO Engine       ({{ .Values.sloEngine.replicas }} replicas)
+  - Chaos Engine     ({{ .Values.chaosEngine.replicas }} replicas)
+  - Delivery Ctrl    ({{ .Values.deliveryController.replicas }} replicas)
+  - Cost Guard       ({{ .Values.costGuard.replicas }} replicas)
+  - Incident Manager ({{ .Values.incidentManager.replicas }} replicas)
+
+{{- if .Values.monitoring.prometheus.enabled }}
+
+Prometheus metrics are exposed on port {{ .Values.monitoring.prometheus.port }}.
+{{- end }}
+
+To verify the installation:
+
+  kubectl get pods -l app.kubernetes.io/instance={{ .Release.Name }}
+
+Access the SLO Engine:
+
+  kubectl port-forward svc/{{ include "agent-sre.fullname" . }}-slo-engine {{ .Values.service.port }}:{{ .Values.service.port }}
