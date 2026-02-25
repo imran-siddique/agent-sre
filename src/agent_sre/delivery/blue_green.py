@@ -7,12 +7,15 @@ lifecycle. Supports health checks and rollback on validation failure.
 
 from __future__ import annotations
 
+import logging
 import time
 from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -170,6 +173,7 @@ class BlueGreenManager:
         try:
             is_healthy = health_check_fn()
         except Exception:
+            logger.debug("Health check failed for %s", inactive.name.value, exc_info=True)
             is_healthy = False
 
         health = "healthy" if is_healthy else "unhealthy"

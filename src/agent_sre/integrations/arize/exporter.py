@@ -10,10 +10,13 @@ via its REST API or OTEL collector.
 
 from __future__ import annotations
 
+import logging
 import time
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -89,7 +92,7 @@ class PhoenixExporter:
             try:
                 self._on_span(span)
             except Exception:
-                pass  # Never crash the agent
+                logger.debug("on_span callback failed", exc_info=True)
         self._spans.append(span)
 
     def export_slo_evaluation(
