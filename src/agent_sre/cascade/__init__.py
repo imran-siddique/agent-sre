@@ -1,0 +1,15 @@
+"""Cascading failure protection for multi-agent workflows (OWASP ASI08)."""
+
+from agent_sre.cascade.circuit_breaker import (
+    CascadeDetector,
+    CircuitBreaker,
+    CircuitBreakerConfig,
+    CircuitOpenError,
+)
+
+__all__ = [
+    "CascadeDetector",
+    "CircuitBreaker",
+    "CircuitBreakerConfig",
+    "CircuitOpenError",
+]
