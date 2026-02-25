@@ -1,0 +1,109 @@
+# Chaos Scenarios for Chatbot Agents
+# Pre-built experiments targeting common LLM chatbot failure modes.
+#
+# Usage:
+#   from agent_sre.chaos.loader import load_experiments
+#   experiments = load_experiments("chaos-scenarios.yaml")
+
+scenarios:
+  - id: api_latency_spike
+    name: "LLM API Latency Spike"
+    description: >
+      Simulates degraded LLM provider performance — responses take 5-10x
+      longer than normal.  Tests whether the agent respects timeout budgets
+      and whether SLO burn-rate alerts fire before the error budget is
+      consumed.
+    category: llm
+    severity: medium
+    fault:
+      type: latency_injection
+      target: llm_provider
+      delay_ms: 8000
+      rate: 0.7
+    duration_seconds: 300
+    abort_condition:
+      metric: task_success_rate
+      threshold: 0.3
+      comparator: lte
+    tags: [llm, latency, provider, chatbot]
+
+  - id: partial_outage
+    name: "Partial LLM Outage"
+    description: >
+      50% of LLM calls return errors (HTTP 503).  Validates that the agent
+      retries gracefully and the circuit breaker trips before the user
+      experience degrades further.
+    category: llm
+    severity: high
+    fault:
+      type: error_injection
+      target: llm_provider
+      error: service_unavailable
+      rate: 0.5
+    duration_seconds: 300
+    abort_condition:
+      metric: task_success_rate
+      threshold: 0.2
+      comparator: lte
+    tags: [llm, outage, error, chatbot]
+
+  - id: full_outage
+    name: "Full LLM Outage"
+    description: >
+      Complete LLM provider failure — every call errors.  Measures
+      time-to-detect, circuit breaker activation speed, and fallback
+      behavior.
+    category: llm
+    severity: critical
+    fault:
+      type: error_injection
+      target: llm_provider
+      error: service_unavailable
+      rate: 1.0
+    duration_seconds: 120
+    abort_condition:
+      metric: task_success_rate
+      threshold: 0.0
+      comparator: lte
+    tags: [llm, outage, critical, chatbot]
+
+  - id: token_exhaustion
+    name: "Token Limit Exhaustion"
+    description: >
+      Simulates hitting the token-per-minute rate limit.  The agent
+      receives rate-limit errors on 80% of calls, forcing queuing or
+      back-off logic to engage.
+    category: llm
+    severity: high
+    fault:
+      type: error_injection
+      target: llm_provider
+      error: rate_limit_exceeded
+      rate: 0.8
+    duration_seconds: 300
+    abort_condition:
+      metric: task_success_rate
+      threshold: 0.1
+      comparator: lte
+    tags: [llm, tokens, rate-limit, chatbot]
+
+  - id: hallucination_spike
+    name: "Hallucination Quality Spike"
+    description: >
+      Models the scenario where the LLM returns syntactically valid but
+      factually incorrect responses at an elevated rate.  Tests whether
+      the agent's quality-evaluation SLI detects the drift and fires
+      alerts before users are impacted.
+    category: llm
+    severity: medium
+    fault:
+      type: error_injection
+      target: quality_evaluator
+      error: hallucination_detected
+      rate: 0.3
+    duration_seconds: 600
+    abort_condition:
+      metric: hallucination_rate
+      threshold: 0.25
+      comparator: gte
+    tags: [llm, hallucination, quality, chatbot]
