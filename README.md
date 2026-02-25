@@ -304,8 +304,8 @@ from agent_sre.incidents.detector import IncidentDetector, Signal, SignalType
 detector = IncidentDetector(correlation_window_seconds=300)
 
 # Register automated responses
-detector.register_response("slo_breach", ["auto_rollback", "notify_oncall"])
-detector.register_response("cost_anomaly", ["throttle_agent", "generate_postmortem"])
+detector.register_response("slo_breach", ["manual_rollback", "notify_oncall"])
+detector.register_response("cost_anomaly", ["throttle_agent", "create_postmortem_template"])
 
 # Ingest signals from your monitoring
 signal = Signal(
