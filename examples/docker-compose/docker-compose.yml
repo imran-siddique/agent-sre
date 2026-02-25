@@ -1,0 +1,118 @@
+# Agent-SRE Observability Stack
+#
+# Full monitoring demo with Prometheus metrics scraping and Grafana dashboards.
+#
+# Quick start:
+#   docker compose up -d
+#
+# Access:
+#   Agent-SRE API:  http://localhost:8080
+#   Prometheus:     http://localhost:9090
+#   Grafana:        http://localhost:3000  (admin / admin)
+
+services:
+  agent-sre:
+    build:
+      context: ../..
+      dockerfile: examples/docker-compose/Dockerfile
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  sample-agent:
+    build:
+      context: ../..
+      dockerfile: examples/docker-compose/Dockerfile
+    command: >
+      python -c "
+      import time, random, urllib.request, json
+
+      time.sleep(5)  # wait for agent-sre to start
+
+      # Register an SLO
+      slo_payload = json.dumps({
+          'name': 'demo-agent-success-rate',
+          'description': 'Demo agent task success rate',
+          'agent_id': 'demo-agent',
+          'indicators': [{'name': 'task_success', 'target': 0.95, 'window': '1h'}],
+          'error_budget_total': 0.05
+      }).encode()
+      req = urllib.request.Request(
+          'http://agent-sre:8080/api/v1/slos',
+          data=slo_payload,
+          headers={'Content-Type': 'application/json'},
+          method='POST'
+      )
+      try:
+          urllib.request.urlopen(req)
+          print('SLO registered')
+      except Exception as e:
+          print(f'SLO registration: {e}')
+
+      # Generate events
+      while True:
+          good = random.random() < 0.92
+          event = json.dumps({'good': good}).encode()
+          req = urllib.request.Request(
+              'http://agent-sre:8080/api/v1/slos/demo-agent-success-rate/events',
+              data=event,
+              headers={'Content-Type': 'application/json'},
+              method='POST'
+          )
+          try:
+              urllib.request.urlopen(req)
+              print(f'Event: good={good}')
+          except Exception as e:
+              print(f'Event error: {e}')
+
+          # Record some cost
+          cost = json.dumps({
+              'agent_id': 'demo-agent',
+              'task_id': f'task-{int(time.time())}',
+              'cost_usd': round(random.uniform(0.001, 0.05), 4)
+          }).encode()
+          req = urllib.request.Request(
+              'http://agent-sre:8080/api/v1/cost/record',
+              data=cost,
+              headers={'Content-Type': 'application/json'},
+              method='POST'
+          )
+          try:
+              urllib.request.urlopen(req)
+          except Exception:
+              pass
+
+          time.sleep(5)
+      "
+    depends_on:
+      agent-sre:
+        condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      agent-sre:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/agent-sre-overview.json
+    volumes:
+      - ./dashboards:/var/lib/grafana/dashboards:ro
+      - ./config/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./config/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+    depends_on:
+      - prometheus
