@@ -10,6 +10,9 @@ from agent_sre.delivery.blue_green import (
     EnvironmentState,
 )
 
+# Config with zero timeouts for fast tests
+_FAST = BlueGreenConfig(drain_timeout_seconds=0, health_check_interval_seconds=0, validation_timeout_seconds=0)
+
 
 class TestInitialState:
     """Blue=active, green=inactive on startup."""
@@ -49,7 +52,7 @@ class TestValidate:
     """Validate with health check function."""
 
     def test_passing_health_check(self) -> None:
-        mgr = BlueGreenManager()
+        mgr = BlueGreenManager(config=_FAST)
         mgr.deploy("v2.0.0")
         result = mgr.validate(lambda: True)
         assert result is True
@@ -57,7 +60,7 @@ class TestValidate:
         assert inactive.health_status == "healthy"
 
     def test_failing_health_check(self) -> None:
-        mgr = BlueGreenManager()
+        mgr = BlueGreenManager(config=_FAST)
         mgr.deploy("v2.0.0")
         result = mgr.validate(lambda: False)
         assert result is False
@@ -66,7 +69,7 @@ class TestValidate:
         assert inactive.state == EnvironmentState.INACTIVE
 
     def test_exception_in_health_check_treated_as_failure(self) -> None:
-        mgr = BlueGreenManager()
+        mgr = BlueGreenManager(config=_FAST)
         mgr.deploy("v2.0.0")
 
         def bad_check() -> bool:
@@ -80,7 +83,7 @@ class TestSwitch:
     """Switch traffic between environments."""
 
     def test_switch_makes_inactive_active(self) -> None:
-        mgr = BlueGreenManager()
+        mgr = BlueGreenManager(config=_FAST)
         mgr.deploy("v2.0.0")
         mgr.validate(lambda: True)
         new_active = mgr.switch()
@@ -88,7 +91,7 @@ class TestSwitch:
         assert new_active.state == EnvironmentState.ACTIVE
 
     def test_switch_drains_previous_active(self) -> None:
-        mgr = BlueGreenManager()
+        mgr = BlueGreenManager(config=_FAST)
         mgr.deploy("v2.0.0")
         mgr.validate(lambda: True)
         mgr.switch()
@@ -97,7 +100,7 @@ class TestSwitch:
         assert old.state == EnvironmentState.INACTIVE
 
     def test_switch_fails_when_not_healthy(self) -> None:
-        mgr = BlueGreenManager()
+        mgr = BlueGreenManager(config=_FAST)
         mgr.deploy("v2.0.0")
         mgr.validate(lambda: False)
         with pytest.raises(RuntimeError, match="health_status"):
@@ -108,7 +111,7 @@ class TestRollback:
     """Rollback switches back to previous environment."""
 
     def test_rollback_restores_previous_active(self) -> None:
-        mgr = BlueGreenManager()
+        mgr = BlueGreenManager(config=_FAST)
         mgr.deploy("v2.0.0")
         mgr.validate(lambda: True)
         mgr.switch()
@@ -117,12 +120,12 @@ class TestRollback:
         assert restored.state == EnvironmentState.ACTIVE
 
     def test_rollback_without_previous_raises(self) -> None:
-        mgr = BlueGreenManager()
+        mgr = BlueGreenManager(config=_FAST)
         with pytest.raises(RuntimeError, match="No previous environment"):
             mgr.rollback()
 
     def test_rollback_emits_event(self) -> None:
-        mgr = BlueGreenManager()
+        mgr = BlueGreenManager(config=_FAST)
         mgr.deploy("v2.0.0")
         mgr.validate(lambda: True)
         mgr.switch()
@@ -135,7 +138,7 @@ class TestFailedValidationPreventsSwitch:
     """Failed validation must prevent traffic switch."""
 
     def test_cannot_switch_after_failed_validation(self) -> None:
-        mgr = BlueGreenManager()
+        mgr = BlueGreenManager(config=_FAST)
         mgr.deploy("v2.0.0")
         mgr.validate(lambda: False)
         with pytest.raises(RuntimeError):
@@ -146,7 +149,7 @@ class TestFullLifecycle:
     """Full lifecycle: deploy → validate → switch → deploy → validate → switch."""
 
     def test_two_full_cycles(self) -> None:
-        mgr = BlueGreenManager()
+        mgr = BlueGreenManager(config=_FAST)
 
         # Cycle 1: deploy v2 to green, switch to green
         mgr.deploy("v2.0.0")
@@ -177,14 +180,14 @@ class TestGetStatus:
         assert status["active_environment"] == "blue"
 
     def test_status_after_deploy(self) -> None:
-        mgr = BlueGreenManager()
+        mgr = BlueGreenManager(config=_FAST)
         mgr.deploy("v2.0.0")
         status = mgr.get_status()
         assert status["green"]["agent_version"] == "v2.0.0"
         assert status["green"]["state"] == EnvironmentState.DEPLOYING
 
     def test_status_tracks_events(self) -> None:
-        mgr = BlueGreenManager()
+        mgr = BlueGreenManager(config=_FAST)
         mgr.deploy("v2.0.0")
         mgr.validate(lambda: True)
         status = mgr.get_status()

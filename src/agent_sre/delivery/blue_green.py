@@ -53,8 +53,8 @@ class BlueGreenConfig(BaseModel):
     """Configuration for blue-green deployment behavior."""
 
     validation_timeout_seconds: int = 60
-    drain_timeout_seconds: int = 30  # TODO: wire into drain phase of switch()
-    health_check_interval_seconds: int = 5  # TODO: wire into validation polling
+    drain_timeout_seconds: int = 30
+    health_check_interval_seconds: int = 5
     auto_rollback_on_failure: bool = True
 
 
@@ -170,11 +170,21 @@ class BlueGreenManager:
         self._set_env(updated.name, updated)
         self._emit("validate_start", updated.name)
 
-        try:
-            is_healthy = health_check_fn()
-        except Exception:
-            logger.debug("Health check failed for %s", inactive.name.value, exc_info=True)
-            is_healthy = False
+        is_healthy = False
+        elapsed = 0.0
+        interval = self.config.health_check_interval_seconds
+        timeout = self.config.validation_timeout_seconds
+        while True:
+            try:
+                if health_check_fn():
+                    is_healthy = True
+                    break
+            except Exception:
+                logger.debug("Health check failed for %s", inactive.name.value, exc_info=True)
+            elapsed += interval
+            if elapsed >= timeout:
+                break
+            time.sleep(interval)
 
         health = "healthy" if is_healthy else "unhealthy"
         updated = self._env(updated.name).model_copy(update={"health_status": health})
@@ -222,6 +232,14 @@ class BlueGreenManager:
 
         self._previous_active = self._active_env
         self._active_env = new_active.name
+
+        # Wait for in-flight requests to complete
+        logger.info(
+            "Draining %s for %ds before deactivation",
+            draining.name.value,
+            self.config.drain_timeout_seconds,
+        )
+        time.sleep(self.config.drain_timeout_seconds)
 
         # Complete drain → inactive
         drained = self._env(draining.name).model_copy(
