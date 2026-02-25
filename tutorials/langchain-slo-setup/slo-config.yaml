@@ -1,0 +1,79 @@
+# SLO Configuration for a LangChain Agent
+# =========================================
+# Define reliability targets, error budgets, and alert thresholds
+# for a production LangChain RAG agent.
+
+name: langchain-rag-agent
+description: >
+  SLO for a LangChain retrieval-augmented generation agent.
+  Tracks latency, task success, tool accuracy, cost, and
+  hallucination rate with a 5% error budget.
+
+service: langchain-rag-agent
+
+# ── Service Level Indicators ───────────────────────────────────────────
+
+indicators:
+  - name: task_success_rate
+    type: TaskSuccessRate
+    target: 0.95
+    window: 24h
+
+  - name: response_latency
+    type: ResponseLatency
+    target_ms: 5000.0
+    percentile: 0.95
+    window: 1h
+
+  - name: tool_call_accuracy
+    type: ToolCallAccuracy
+    target: 0.98
+    window: 24h
+
+  - name: cost_per_task
+    type: CostPerTask
+    target_usd: 0.50
+    window: 24h
+
+  - name: hallucination_rate
+    type: HallucinationRate
+    target: 0.05
+    window: 24h
+
+# ── Error Budget ───────────────────────────────────────────────────────
+
+error_budget:
+  total: 0.05                  # 5% error budget (1 − 0.95 target)
+  burn_rate_thresholds:
+    - name: slow_burn
+      rate: 2.0
+      severity: warning
+      window_seconds: 21600    # 6-hour window
+    - name: fast_burn
+      rate: 10.0
+      severity: critical
+      window_seconds: 3600     # 1-hour window
+  exhaustion_action: freeze_deployments
+
+# ── Cost Guardrails ────────────────────────────────────────────────────
+
+cost_guard:
+  per_task_limit: 1.00         # Max $1 per agent task
+  per_agent_daily_limit: 25.0  # Max $25/day for this agent
+  org_monthly_budget: 500.0    # Org-wide monthly cap
+  alert_thresholds:
+    - 0.50                     # Alert at 50% budget consumed
+    - 0.75                     # Alert at 75% budget consumed
+    - 0.90                     # Alert at 90% budget consumed
+
+# ── Labels & Metadata ─────────────────────────────────────────────────
+
+labels:
+  tier: production
+  domain: rag
+  framework: langchain
+
+metadata:
+  owner: ml-platform-team
+  slack_channel: "#agent-reliability"
+  runbook: https://wiki.example.com/runbooks/langchain-rag-agent
