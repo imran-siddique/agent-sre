@@ -17,6 +17,14 @@ class FaultType(Enum):
     ERROR_INJECTION = "error_injection"
     TIMEOUT_INJECTION = "timeout_injection"
 
+    # Adversarial fault types
+    PROMPT_INJECTION = "prompt_injection"
+    POLICY_BYPASS = "policy_bypass"
+    PRIVILEGE_ESCALATION = "privilege_escalation"
+    DATA_EXFILTRATION = "data_exfiltration"
+    TOOL_ABUSE = "tool_abuse"
+    IDENTITY_SPOOFING = "identity_spoofing"
+
 
 class ExperimentState(Enum):
     """State of a chaos experiment."""
@@ -51,6 +59,38 @@ class Fault:
     def timeout_injection(target: str, delay_ms: int = 30000, rate: float = 1.0) -> Fault:
         """Inject timeouts into a target."""
         return Fault(FaultType.TIMEOUT_INJECTION, target, rate, {"delay_ms": delay_ms})
+
+    # Adversarial fault factory methods
+
+    @staticmethod
+    def prompt_injection(target: str, technique: str = "direct_override", rate: float = 1.0) -> Fault:
+        """Inject a prompt injection attack against a target."""
+        return Fault(FaultType.PROMPT_INJECTION, target, rate, {"technique": technique})
+
+    @staticmethod
+    def policy_bypass(target: str, policy_name: str = "default", rate: float = 1.0) -> Fault:
+        """Attempt to bypass a governance policy."""
+        return Fault(FaultType.POLICY_BYPASS, target, rate, {"policy_name": policy_name})
+
+    @staticmethod
+    def privilege_escalation(target: str, target_role: str = "admin", rate: float = 1.0) -> Fault:
+        """Attempt privilege escalation against a target."""
+        return Fault(FaultType.PRIVILEGE_ESCALATION, target, rate, {"target_role": target_role})
+
+    @staticmethod
+    def data_exfiltration(target: str, data_type: str = "pii", rate: float = 1.0) -> Fault:
+        """Simulate data exfiltration attempt."""
+        return Fault(FaultType.DATA_EXFILTRATION, target, rate, {"data_type": data_type})
+
+    @staticmethod
+    def tool_abuse(target: str, tool_name: str = "shell_exec", rate: float = 1.0) -> Fault:
+        """Simulate abuse of a dangerous tool."""
+        return Fault(FaultType.TOOL_ABUSE, target, rate, {"tool_name": tool_name})
+
+    @staticmethod
+    def identity_spoofing(target: str, spoofed_id: str = "admin-agent", rate: float = 1.0) -> Fault:
+        """Simulate identity spoofing attack."""
+        return Fault(FaultType.IDENTITY_SPOOFING, target, rate, {"spoofed_id": spoofed_id})
 
     # Legacy aliases for backward compatibility
     @staticmethod
