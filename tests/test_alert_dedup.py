@@ -11,8 +11,6 @@ import threading
 import time
 from unittest.mock import patch
 
-import pytest
-
 from agent_sre.alerts import (
     Alert,
     AlertBatcher,
@@ -23,7 +21,6 @@ from agent_sre.alerts import (
     ChannelConfig,
     alert_fingerprint,
 )
-
 
 # =============================================================================
 # alert_fingerprint

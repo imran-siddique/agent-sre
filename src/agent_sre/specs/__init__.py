@@ -46,24 +46,24 @@ def _parse_value(val: str) -> Any:
         return val
 
 
-def _parse_yaml(content: str) -> Dict[str, Any]:
+def _parse_yaml(content: str) -> dict[str, Any]:
     """Parse YAML content. Uses PyYAML if available, otherwise basic parser."""
     if _HAS_YAML:
         return yaml.safe_load(content)  # type: ignore
     return _minimal_yaml_parse(content)
 
 
-def _minimal_yaml_parse(content: str) -> Dict[str, Any]:
+def _minimal_yaml_parse(content: str) -> dict[str, Any]:
     """
     Minimal YAML parser for SLO template format.
     Handles: top-level keys, nested dicts, list-of-dicts, multiline strings.
     """
-    result: Dict[str, Any] = {}
+    result: dict[str, Any] = {}
     lines = content.split("\n")
     i = 0
     current_key = ""
-    current_list: Optional[List[Dict[str, Any]]] = None
-    current_item: Optional[Dict[str, Any]] = None
+    current_list: list[dict[str, Any]] | None = None
+    current_item: dict[str, Any] | None = None
 
     while i < len(lines):
         line = lines[i]
@@ -144,7 +144,7 @@ def _minimal_yaml_parse(content: str) -> Dict[str, Any]:
     return result
 
 
-def list_templates(specs_dir: Optional[str] = None) -> List[str]:
+def list_templates(specs_dir: str | None = None) -> list[str]:
     """List available SLO template names."""
     d = Path(specs_dir) if specs_dir else _SPECS_DIR
     if not d.exists():
@@ -154,8 +154,8 @@ def list_templates(specs_dir: Optional[str] = None) -> List[str]:
 
 def load_slo_template(
     name: str,
-    specs_dir: Optional[str] = None,
-) -> Dict[str, Any]:
+    specs_dir: str | None = None,
+) -> dict[str, Any]:
     """
     Load an SLO template by name.
 

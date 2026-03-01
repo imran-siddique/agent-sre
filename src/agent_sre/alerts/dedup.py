@@ -13,9 +13,12 @@ from __future__ import annotations
 import hashlib
 import threading
 import time
-from typing import Dict, List, Sequence, Tuple
+from typing import TYPE_CHECKING
 
 from agent_sre.alerts import Alert, AlertSeverity
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def alert_fingerprint(alert: Alert, fields: Sequence[str] = ("agent_id", "title")) -> str:
@@ -48,12 +51,12 @@ class AlertDeduplicator:
     def __init__(
         self,
         window_seconds: float = 300,
-        group_by: Tuple[str, ...] = ("agent_id", "title"),
+        group_by: tuple[str, ...] = ("agent_id", "title"),
     ) -> None:
         self._window_seconds = window_seconds
         self._group_by = group_by
         self._lock = threading.Lock()
-        self._sent: Dict[str, float] = {}  # fingerprint -> last-sent timestamp
+        self._sent: dict[str, float] = {}  # fingerprint -> last-sent timestamp
         self._total_received: int = 0
         self._total_deduplicated: int = 0
 
@@ -120,7 +123,7 @@ class AlertBatcher:
         self._batch_window_seconds = batch_window_seconds
         self._max_batch_size = max_batch_size
         self._lock = threading.Lock()
-        self._alerts: List[Alert] = []
+        self._alerts: list[Alert] = []
         self._window_start: float = time.time()
 
     # -- public API ----------------------------------------------------------
@@ -139,11 +142,9 @@ class AlertBatcher:
                 return False
             if len(self._alerts) >= self._max_batch_size:
                 return True
-            if (time.time() - self._window_start) >= self._batch_window_seconds:
-                return True
-            return False
+            return time.time() - self._window_start >= self._batch_window_seconds
 
-    def flush(self) -> List[Alert]:
+    def flush(self) -> list[Alert]:
         """Return all batched alerts and clear the batch."""
         with self._lock:
             alerts = list(self._alerts)
@@ -159,7 +160,7 @@ class AlertBatcher:
 
             total = len(self._alerts)
             # Group by severity
-            by_severity: Dict[str, int] = {}
+            by_severity: dict[str, int] = {}
             for a in self._alerts:
                 sev = a.severity.value
                 by_severity[sev] = by_severity.get(sev, 0) + 1

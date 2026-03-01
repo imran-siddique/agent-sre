@@ -4,18 +4,14 @@ Tests for MCP Tool Drift Detection.
 Covers: ToolSchema, ToolSnapshot, DriftDetector, DriftAlert, DriftReport.
 """
 
-import pytest
 
 from agent_sre.integrations.mcp import (
-    DriftAlert,
     DriftDetector,
-    DriftReport,
     DriftSeverity,
     DriftType,
     ToolSchema,
     ToolSnapshot,
 )
-
 
 # =============================================================================
 # ToolSchema

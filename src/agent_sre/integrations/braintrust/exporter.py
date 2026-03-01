@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class EvalRecord:
     trace_id: str
     agent_id: str
     slo_name: str
-    scores: Dict[str, float]
+    scores: dict[str, float]
     input_data: Any = None
     output_data: Any = None
     expected: Any = None
@@ -46,7 +46,7 @@ class ExperimentRecord:
     """A batch experiment record for Braintrust."""
 
     name: str
-    entries: List[Dict[str, Any]]
+    entries: list[dict[str, Any]]
     timestamp: float = field(default_factory=time.time)
 
 
@@ -81,8 +81,8 @@ class BraintrustExporter:
         self._offline = client is None
         self.project_name = project_name
 
-        self._evaluations: List[EvalRecord] = []
-        self._experiments: List[ExperimentRecord] = []
+        self._evaluations: list[EvalRecord] = []
+        self._experiments: list[ExperimentRecord] = []
 
     @property
     def is_offline(self) -> bool:
@@ -90,12 +90,12 @@ class BraintrustExporter:
         return self._offline
 
     @property
-    def evaluations(self) -> List[EvalRecord]:
+    def evaluations(self) -> list[EvalRecord]:
         """Get recorded evaluations."""
         return list(self._evaluations)
 
     @property
-    def experiments(self) -> List[ExperimentRecord]:
+    def experiments(self) -> list[ExperimentRecord]:
         """Get recorded experiments."""
         return list(self._experiments)
 
@@ -104,7 +104,7 @@ class BraintrustExporter:
         trace_id: str,
         agent_id: str,
         slo_name: str,
-        scores: Dict[str, float],
+        scores: dict[str, float],
         input_data: Any = None,
         output_data: Any = None,
         expected: Any = None,
@@ -154,7 +154,7 @@ class BraintrustExporter:
     def log_experiment(
         self,
         experiment_name: str,
-        entries: List[Dict[str, Any]],
+        entries: list[dict[str, Any]],
     ) -> ExperimentRecord:
         """Log a batch of evaluations as an experiment.
 
@@ -186,7 +186,7 @@ class BraintrustExporter:
         self,
         trace_id: str,
         slo: Any,
-    ) -> List[EvalRecord]:
+    ) -> list[EvalRecord]:
         """Export SLO evaluation as Braintrust scores.
 
         Creates evaluation records with SLO metrics as scores:
@@ -206,7 +206,7 @@ class BraintrustExporter:
         status_code = SLO_STATUS_CODES.get(status.value, -1)
         burn = slo.error_budget.burn_rate()
 
-        scores: Dict[str, float] = {
+        scores: dict[str, float] = {
             "status": float(status_code),
             "budget_remaining": slo.error_budget.remaining,
             "burn_rate": burn,
@@ -230,7 +230,7 @@ class BraintrustExporter:
         trace_id: str,
         agent_id: str,
         cost_usd: float,
-        metadata: Dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> EvalRecord:
         """Record cost data as an evaluation.
 
@@ -257,7 +257,7 @@ class BraintrustExporter:
         self._evaluations.clear()
         self._experiments.clear()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get statistics about recorded data."""
         return {
             "total_evaluations": len(self._evaluations),

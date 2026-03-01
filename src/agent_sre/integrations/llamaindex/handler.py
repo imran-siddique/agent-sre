@@ -28,8 +28,8 @@ from __future__ import annotations
 
 import logging
 import time
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -114,15 +114,15 @@ class AgentSRELlamaIndexHandler:
         self.cost_per_1k_output = cost_per_1k_output
 
         # Records
-        self._queries: List[QueryRecord] = []
-        self._llm_calls: List[LLMCallRecord] = []
-        self._retrievers: List[RetrieverRecord] = []
-        self._sub_questions: List[Dict[str, Any]] = []
+        self._queries: list[QueryRecord] = []
+        self._llm_calls: list[LLMCallRecord] = []
+        self._retrievers: list[RetrieverRecord] = []
+        self._sub_questions: list[dict[str, Any]] = []
 
         # Active runs
-        self._active_queries: Dict[str, QueryRecord] = {}
-        self._active_llm: Dict[str, LLMCallRecord] = {}
-        self._active_retrievers: Dict[str, RetrieverRecord] = {}
+        self._active_queries: dict[str, QueryRecord] = {}
+        self._active_llm: dict[str, LLMCallRecord] = {}
+        self._active_retrievers: dict[str, RetrieverRecord] = {}
 
         # ID counters
         self._query_counter = 0
@@ -331,22 +331,22 @@ class AgentSRELlamaIndexHandler:
     # ------------------------------------------------------------------
 
     @property
-    def queries(self) -> List[QueryRecord]:
+    def queries(self) -> list[QueryRecord]:
         return list(self._queries)
 
     @property
-    def llm_calls(self) -> List[LLMCallRecord]:
+    def llm_calls(self) -> list[LLMCallRecord]:
         return list(self._llm_calls)
 
     @property
-    def retrievers(self) -> List[RetrieverRecord]:
+    def retrievers(self) -> list[RetrieverRecord]:
         return list(self._retrievers)
 
     @property
-    def sub_questions(self) -> List[Dict[str, Any]]:
+    def sub_questions(self) -> list[dict[str, Any]]:
         return list(self._sub_questions)
 
-    def get_sli_snapshot(self) -> Dict[str, Any]:
+    def get_sli_snapshot(self) -> dict[str, Any]:
         """Return all SLI values as a dict (for recording into Agent-SRE SLO)."""
         return {
             "task_success_rate": self.task_success_rate,

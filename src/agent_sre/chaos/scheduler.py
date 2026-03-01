@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 from datetime import datetime, time
-from typing import Any
 
 from pydantic import BaseModel, Field
 

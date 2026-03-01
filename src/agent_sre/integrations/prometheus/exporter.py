@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 
 @dataclass
@@ -12,7 +12,7 @@ class MetricSample:
     """A single metric sample."""
     name: str
     value: float
-    labels: Dict[str, str] = field(default_factory=dict)
+    labels: dict[str, str] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
     metric_type: str = "gauge"  # gauge, counter, histogram
     help_text: str = ""
@@ -28,18 +28,18 @@ class PrometheusExporter:
     """
 
     def __init__(self) -> None:
-        self._gauges: Dict[str, MetricSample] = {}
-        self._counters: Dict[str, MetricSample] = {}
-        self._help: Dict[str, str] = {}
-        self._type: Dict[str, str] = {}
+        self._gauges: dict[str, MetricSample] = {}
+        self._counters: dict[str, MetricSample] = {}
+        self._help: dict[str, str] = {}
+        self._type: dict[str, str] = {}
 
-    def _label_key(self, name: str, labels: Dict[str, str]) -> str:
+    def _label_key(self, name: str, labels: dict[str, str]) -> str:
         """Create a unique key for a metric + label combination."""
         sorted_labels = sorted(labels.items())
         label_str = ",".join(f'{k}="{v}"' for k, v in sorted_labels)
         return f"{name}{{{label_str}}}" if label_str else name
 
-    def set_gauge(self, name: str, value: float, labels: Optional[Dict[str, str]] = None,
+    def set_gauge(self, name: str, value: float, labels: dict[str, str] | None = None,
                   help_text: str = "") -> None:
         """Set a gauge metric value."""
         labels = labels or {}
@@ -49,7 +49,7 @@ class PrometheusExporter:
             self._help[name] = help_text
         self._type[name] = "gauge"
 
-    def inc_counter(self, name: str, value: float = 1.0, labels: Optional[Dict[str, str]] = None,
+    def inc_counter(self, name: str, value: float = 1.0, labels: dict[str, str] | None = None,
                     help_text: str = "") -> None:
         """Increment a counter metric."""
         labels = labels or {}
@@ -79,8 +79,8 @@ class PrometheusExporter:
 
     def render(self) -> str:
         """Render all metrics in Prometheus text exposition format."""
-        lines: List[str] = []
-        seen_meta: Set[str] = set()
+        lines: list[str] = []
+        seen_meta: set[str] = set()
 
         all_samples = list(self._gauges.values()) + list(self._counters.values())
         all_samples.sort(key=lambda s: s.name)
@@ -106,7 +106,7 @@ class PrometheusExporter:
         self._help.clear()
         self._type.clear()
 
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> dict[str, int]:
         return {
             "gauges": len(self._gauges),
             "counters": len(self._counters),

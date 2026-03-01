@@ -12,7 +12,6 @@ import pytest
 
 from agent_sre.specs import list_templates, load_slo_template
 
-
 EXPECTED_TEMPLATES = [
     "coding-agent",
     "customer-support-agent",

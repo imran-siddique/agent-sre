@@ -38,8 +38,10 @@ import hashlib
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ---------------------------------------------------------------------------
 # Tiers
@@ -64,11 +66,11 @@ class Criterion:
     name: str
     description: str
     tier: CertificationTier
-    check_fn: Callable[[Dict[str, Any]], bool]
+    check_fn: Callable[[dict[str, Any]], bool]
     evidence_key: str = ""  # Key to look up in evidence dict
     required: bool = True   # If False, failure is advisory only
 
-    def check(self, evidence: Dict[str, Any]) -> bool:
+    def check(self, evidence: dict[str, Any]) -> bool:
         """Evaluate this criterion against provided evidence."""
         return self.check_fn(evidence)
 
@@ -82,7 +84,7 @@ class CriterionResult:
     required: bool
     message: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "passed": self.passed,
@@ -102,7 +104,7 @@ class CertificationResult:
     tier: CertificationTier
     passed: bool
     agent_id: str = ""
-    criteria_results: List[CriterionResult] = field(default_factory=list)
+    criteria_results: list[CriterionResult] = field(default_factory=list)
     timestamp: float = field(default_factory=time.time)
     certificate_id: str = ""
 
@@ -119,10 +121,10 @@ class CertificationResult:
         return sum(1 for c in self.criteria_results if not c.required and c.passed)
 
     @property
-    def failures(self) -> List[CriterionResult]:
+    def failures(self) -> list[CriterionResult]:
         return [c for c in self.criteria_results if not c.passed and c.required]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "tier": self.tier.value,
             "passed": self.passed,
@@ -140,9 +142,9 @@ class CertificationResult:
 # Default criteria
 # ---------------------------------------------------------------------------
 
-def _default_criteria() -> List[Criterion]:
+def _default_criteria() -> list[Criterion]:
     """Build the default certification criteria for all tiers."""
-    criteria: List[Criterion] = []
+    criteria: list[Criterion] = []
 
     # -- BRONZE: Basic reliability --
     criteria.append(Criterion(
@@ -248,14 +250,14 @@ class CertificationEvaluator:
     Supports custom criteria in addition to defaults.
     """
 
-    def __init__(self, criteria: List[Criterion] | None = None) -> None:
+    def __init__(self, criteria: list[Criterion] | None = None) -> None:
         self._criteria = criteria if criteria is not None else _default_criteria()
 
     @property
-    def criteria(self) -> List[Criterion]:
+    def criteria(self) -> list[Criterion]:
         return list(self._criteria)
 
-    def criteria_for_tier(self, tier: CertificationTier) -> List[Criterion]:
+    def criteria_for_tier(self, tier: CertificationTier) -> list[Criterion]:
         """Get all criteria applicable to a tier (cumulative)."""
         tier_order = [CertificationTier.BRONZE, CertificationTier.SILVER, CertificationTier.GOLD]
         tier_idx = tier_order.index(tier)
@@ -265,7 +267,7 @@ class CertificationEvaluator:
     def evaluate(
         self,
         tier: CertificationTier,
-        evidence: Dict[str, Any],
+        evidence: dict[str, Any],
         agent_id: str = "",
     ) -> CertificationResult:
         """Evaluate an agent against a certification tier.
@@ -279,12 +281,12 @@ class CertificationEvaluator:
             CertificationResult with pass/fail and details.
         """
         applicable = self.criteria_for_tier(tier)
-        results: List[CriterionResult] = []
+        results: list[CriterionResult] = []
 
         for criterion in applicable:
             try:
                 passed = criterion.check(evidence)
-            except Exception as exc:
+            except Exception:
                 passed = False
 
             msg = ""
@@ -317,7 +319,7 @@ class CertificationEvaluator:
             certificate_id=cert_id,
         )
 
-    def highest_tier(self, evidence: Dict[str, Any], agent_id: str = "") -> CertificationResult:
+    def highest_tier(self, evidence: dict[str, Any], agent_id: str = "") -> CertificationResult:
         """Find the highest tier an agent qualifies for.
 
         Evaluates from GOLD down to BRONZE, returning the first passing tier.

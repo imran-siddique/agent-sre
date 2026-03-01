@@ -15,10 +15,9 @@ Usage:
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from opentelemetry import metrics
-from opentelemetry.metrics import Meter, CallbackOptions, Observation
 
 from agent_sre.integrations.otel.conventions import (
     AGENT_ID,
@@ -40,6 +39,9 @@ from agent_sre.integrations.otel.conventions import (
     SLO_NAME,
     SLO_STATUS_CODES,
 )
+
+if TYPE_CHECKING:
+    from opentelemetry.metrics import Meter
 
 logger = logging.getLogger(__name__)
 

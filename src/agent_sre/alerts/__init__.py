@@ -16,7 +16,10 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class AlertChannel(Enum):
@@ -49,11 +52,11 @@ class Alert:
     source: str = "agent-sre"
     agent_id: str = ""
     slo_name: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
     dedup_key: str = ""  # For PagerDuty deduplication
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "title": self.title,
             "message": self.message,
@@ -74,7 +77,7 @@ class ChannelConfig:
     name: str
     url: str = ""  # Webhook URL
     token: str = ""  # Auth token (for PagerDuty routing key, etc.)
-    callback: Optional[Callable[[Alert], None]] = None  # For CALLBACK type
+    callback: Callable[[Alert], None] | None = None  # For CALLBACK type
     min_severity: AlertSeverity = AlertSeverity.WARNING
     enabled: bool = True
 
@@ -95,7 +98,7 @@ class DeliveryResult:
 # ---------------------------------------------------------------------------
 
 
-def format_slack(alert: Alert) -> Dict[str, Any]:
+def format_slack(alert: Alert) -> dict[str, Any]:
     """Format alert as Slack incoming webhook payload."""
     severity_emoji = {
         AlertSeverity.INFO: "ℹ️",
@@ -129,7 +132,7 @@ def format_slack(alert: Alert) -> Dict[str, Any]:
     return {"blocks": blocks}
 
 
-def format_pagerduty(alert: Alert) -> Dict[str, Any]:
+def format_pagerduty(alert: Alert) -> dict[str, Any]:
     """Format alert as PagerDuty Events API v2 payload."""
     pd_severity = {
         AlertSeverity.INFO: "info",
@@ -140,7 +143,7 @@ def format_pagerduty(alert: Alert) -> Dict[str, Any]:
 
     event_action = "resolve" if alert.severity == AlertSeverity.RESOLVED else "trigger"
 
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "event_action": event_action,
         "payload": {
             "summary": f"{alert.title}: {alert.message}",
@@ -158,12 +161,12 @@ def format_pagerduty(alert: Alert) -> Dict[str, Any]:
     return payload
 
 
-def format_generic(alert: Alert) -> Dict[str, Any]:
+def format_generic(alert: Alert) -> dict[str, Any]:
     """Format alert as generic JSON webhook payload."""
     return alert.to_dict()
 
 
-def format_opsgenie(alert: Alert) -> Dict[str, Any]:
+def format_opsgenie(alert: Alert) -> dict[str, Any]:
     """Format alert as OpsGenie Alert API payload."""
     priority_map = {
         AlertSeverity.INFO: "P5",
@@ -171,7 +174,7 @@ def format_opsgenie(alert: Alert) -> Dict[str, Any]:
         AlertSeverity.CRITICAL: "P1",
         AlertSeverity.RESOLVED: "P5",
     }
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "message": alert.title,
         "description": alert.message,
         "priority": priority_map.get(alert.severity, "P3"),
@@ -185,7 +188,7 @@ def format_opsgenie(alert: Alert) -> Dict[str, Any]:
     return payload
 
 
-def format_teams(alert: Alert) -> Dict[str, Any]:
+def format_teams(alert: Alert) -> dict[str, Any]:
     """Format alert as Microsoft Teams incoming webhook payload (Adaptive Card)."""
     severity_color = {
         AlertSeverity.INFO: "default",
@@ -257,10 +260,10 @@ class AlertManager:
     """
 
     def __init__(self, dedup_window_seconds: float = 300.0) -> None:
-        self._channels: Dict[str, ChannelConfig] = {}
-        self._history: List[DeliveryResult] = []
+        self._channels: dict[str, ChannelConfig] = {}
+        self._history: list[DeliveryResult] = []
         self._dedup_window_seconds = dedup_window_seconds
-        self._dedup_cache: Dict[str, float] = {}
+        self._dedup_cache: dict[str, float] = {}
         self._suppressed_count: int = 0
         self._formatters = {
             AlertChannel.SLACK: format_slack,
@@ -277,14 +280,14 @@ class AlertManager:
     def remove_channel(self, name: str) -> None:
         self._channels.pop(name, None)
 
-    def list_channels(self) -> List[str]:
+    def list_channels(self) -> list[str]:
         return list(self._channels.keys())
 
     @property
     def suppressed_count(self) -> int:
         return self._suppressed_count
 
-    def send(self, alert: Alert) -> List[DeliveryResult]:
+    def send(self, alert: Alert) -> list[DeliveryResult]:
         """Send alert to all matching channels."""
         # Deduplication check
         if alert.dedup_key:
@@ -298,11 +301,11 @@ class AlertManager:
                     return []
                 self._dedup_cache[alert.dedup_key] = now
 
-        results: List[DeliveryResult] = []
+        results: list[DeliveryResult] = []
         severity_order = [AlertSeverity.INFO, AlertSeverity.WARNING,
                           AlertSeverity.CRITICAL, AlertSeverity.RESOLVED]
 
-        for name, config in self._channels.items():
+        for _name, config in self._channels.items():
             if not config.enabled:
                 continue
 
@@ -333,7 +336,7 @@ class AlertManager:
             if config.channel_type == AlertChannel.PAGERDUTY and config.token:
                 payload["routing_key"] = config.token
 
-            headers: Optional[Dict[str, str]] = None
+            headers: dict[str, str] | None = None
             if config.channel_type == AlertChannel.OPSGENIE and config.token:
                 headers = {"Authorization": f"GenieKey {config.token}"}
 
@@ -346,8 +349,8 @@ class AlertManager:
                 error=str(e),
             )
 
-    def _http_post(self, channel_name: str, url: str, payload: Dict,
-                   headers: Optional[Dict[str, str]] = None) -> DeliveryResult:
+    def _http_post(self, channel_name: str, url: str, payload: dict,
+                   headers: dict[str, str] | None = None) -> DeliveryResult:
         """Send HTTP POST. Isolated for testability."""
         if not url:
             return DeliveryResult(
@@ -388,10 +391,10 @@ class AlertManager:
             )
 
     @property
-    def history(self) -> List[DeliveryResult]:
+    def history(self) -> list[DeliveryResult]:
         return list(self._history)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         return {
             "channels": len(self._channels),
             "total_sent": len(self._history),
@@ -448,15 +451,15 @@ class PersistentAlertManager(AlertManager):
         conn.commit()
         conn.close()
 
-    def send(self, alert: Alert) -> List[DeliveryResult]:
+    def send(self, alert: Alert) -> list[DeliveryResult]:
         results = super().send(alert)
         if results or not alert.dedup_key:
             self._persist_alert(alert, results)
         return results
 
-    def _persist_alert(self, alert: Alert, results: List[DeliveryResult]) -> None:
-        import sqlite3
+    def _persist_alert(self, alert: Alert, results: list[DeliveryResult]) -> None:
         import json as _json
+        import sqlite3
         conn = sqlite3.connect(self._db_path)
         cursor = conn.execute(
             "INSERT INTO alerts (title, message, severity, source, agent_id, "
@@ -478,7 +481,7 @@ class PersistentAlertManager(AlertManager):
         conn.close()
 
     def query_alerts(self, agent_id: str = "", severity: str = "",
-                     limit: int = 100) -> List[Dict[str, Any]]:
+                     limit: int = 100) -> list[dict[str, Any]]:
         """Query persisted alerts."""
         import sqlite3
         conn = sqlite3.connect(self._db_path)

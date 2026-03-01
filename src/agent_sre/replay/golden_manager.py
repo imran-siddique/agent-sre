@@ -4,11 +4,9 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
 from difflib import SequenceMatcher
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from agent_sre.replay.capture import Trace
 from agent_sre.replay.golden import (
     GoldenSuiteResult,
     GoldenTrace,
@@ -16,6 +14,11 @@ from agent_sre.replay.golden import (
     GoldenTraceSuite,
     TraceSource,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from agent_sre.replay.capture import Trace
 
 
 class GoldenTraceManager:

@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from agent_sre.replay.capture import Span, SpanKind, SpanStatus, Trace, TraceStore
+from agent_sre.replay.capture import Span, SpanStatus, Trace, TraceStore
 
 
 class DiffType(Enum):

@@ -3,13 +3,12 @@
 import pytest
 
 from agent_sre.chaos.library import ChaosLibrary, ExperimentTemplate
-from agent_sre.cost.anomaly import CostAnomalyDetector, AnomalyMethod
-from agent_sre.delivery.gitops import RolloutSpec, AgentRef, SpecVersion
-from agent_sre.incidents.postmortem import Postmortem, PostmortemGenerator, PostmortemStatus
+from agent_sre.cost.anomaly import CostAnomalyDetector
+from agent_sre.delivery.gitops import AgentRef, RolloutSpec, SpecVersion
 from agent_sre.incidents.detector import Incident, IncidentSeverity, Signal, SignalType
-from agent_sre.replay.distributed import DistributedReplayEngine, MeshReplayState
+from agent_sre.incidents.postmortem import Postmortem, PostmortemGenerator, PostmortemStatus
 from agent_sre.replay.capture import Span, SpanKind, Trace
-
+from agent_sre.replay.distributed import DistributedReplayEngine
 
 # --- Trace Replay ---
 
@@ -176,7 +175,7 @@ class TestChaosLibrary:
 class TestCostAnomalyDetector:
     def test_needs_min_samples(self):
         detector = CostAnomalyDetector(min_samples=10)
-        for i in range(9):
+        for _i in range(9):
             result = detector.ingest(1.0)
             assert result is None
 

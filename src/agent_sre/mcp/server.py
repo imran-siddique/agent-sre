@@ -14,7 +14,10 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass
@@ -22,7 +25,7 @@ class MCPToolDefinition:
     """Definition of an MCP tool."""
     name: str
     description: str
-    parameters: Dict[str, Any] = field(default_factory=dict)
+    parameters: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -30,7 +33,7 @@ class MCPToolResult:
     """Result of an MCP tool call."""
     tool_name: str
     success: bool
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     error: str = ""
     timestamp: float = field(default_factory=time.time)
 
@@ -50,12 +53,12 @@ class AgentSREServer:
     """
 
     def __init__(self) -> None:
-        self._slos: Dict[str, Any] = {}
-        self._cost_budgets: Dict[str, float] = {}
-        self._cost_spent: Dict[str, float] = {}
-        self._rollout_status: Dict[str, str] = {}
-        self._call_history: List[MCPToolResult] = []
-        self._tools: Dict[str, Callable] = {
+        self._slos: dict[str, Any] = {}
+        self._cost_budgets: dict[str, float] = {}
+        self._cost_spent: dict[str, float] = {}
+        self._rollout_status: dict[str, str] = {}
+        self._call_history: list[MCPToolResult] = []
+        self._tools: dict[str, Callable] = {
             "sre_check_slo": self._check_slo,
             "sre_report_cost": self._report_cost,
             "sre_request_budget": self._request_budget,
@@ -76,7 +79,7 @@ class AgentSREServer:
         """Set rollout status for an agent (canary, stable, rolling-back)."""
         self._rollout_status[agent_id] = status
 
-    def list_tools(self) -> List[MCPToolDefinition]:
+    def list_tools(self) -> list[MCPToolDefinition]:
         """List available MCP tools."""
         return [
             MCPToolDefinition(
@@ -117,7 +120,7 @@ class AgentSREServer:
             ),
         ]
 
-    def handle_tool_call(self, tool_name: str, arguments: Optional[Dict[str, Any]] = None) -> MCPToolResult:
+    def handle_tool_call(self, tool_name: str, arguments: dict[str, Any] | None = None) -> MCPToolResult:
         """Handle an MCP tool call."""
         arguments = arguments or {}
         handler = self._tools.get(tool_name)
@@ -136,7 +139,7 @@ class AgentSREServer:
         self._call_history.append(result)
         return result
 
-    def _check_slo(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    def _check_slo(self, args: dict[str, Any]) -> dict[str, Any]:
         slo_name = args.get("slo_name", "")
         slo = self._slos.get(slo_name)
         if not slo:
@@ -149,7 +152,7 @@ class AgentSREServer:
             "is_exhausted": slo.error_budget.is_exhausted,
         }
 
-    def _report_cost(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    def _report_cost(self, args: dict[str, Any]) -> dict[str, Any]:
         agent_id = args.get("agent_id", "")
         cost_usd = float(args.get("cost_usd", 0))
         self._cost_spent[agent_id] = self._cost_spent.get(agent_id, 0.0) + cost_usd
@@ -161,7 +164,7 @@ class AgentSREServer:
             "budget_remaining": (budget - self._cost_spent[agent_id]) if budget else None,
         }
 
-    def _request_budget(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    def _request_budget(self, args: dict[str, Any]) -> dict[str, Any]:
         agent_id = args.get("agent_id", "")
         requested = float(args.get("requested_usd", 0))
         budget = self._cost_budgets.get(agent_id)
@@ -177,12 +180,12 @@ class AgentSREServer:
             "reason": "Within budget" if approved else f"Exceeds budget by ${requested - remaining:.4f}",
         }
 
-    def _check_rollout(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    def _check_rollout(self, args: dict[str, Any]) -> dict[str, Any]:
         agent_id = args.get("agent_id", "")
         status = self._rollout_status.get(agent_id, "stable")
         return {"agent_id": agent_id, "rollout_status": status, "is_canary": status == "canary"}
 
-    def _list_slos(self, args: Dict[str, Any]) -> Dict[str, Any]:
+    def _list_slos(self, args: dict[str, Any]) -> dict[str, Any]:
         slos = []
         for name, slo in self._slos.items():
             status = slo.evaluate()
@@ -190,10 +193,10 @@ class AgentSREServer:
         return {"slos": slos, "count": len(slos)}
 
     @property
-    def call_history(self) -> List[MCPToolResult]:
+    def call_history(self) -> list[MCPToolResult]:
         return list(self._call_history)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         return {
             "total_calls": len(self._call_history),
             "successful": sum(1 for r in self._call_history if r.success),

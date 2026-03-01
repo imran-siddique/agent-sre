@@ -6,14 +6,13 @@ Agent SRE data is correctly prepared for Langfuse export.
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
 import pytest
 
 from agent_sre.integrations.langfuse import LangfuseExporter
-from agent_sre.slo.objectives import SLO, ErrorBudget, SLOStatus
-from agent_sre.slo.indicators import TaskSuccessRate, CostPerTask, HallucinationRate
-
+from agent_sre.slo.indicators import CostPerTask, HallucinationRate, TaskSuccessRate
+from agent_sre.slo.objectives import SLO, ErrorBudget
 
 # ========== Fixtures ==========
 

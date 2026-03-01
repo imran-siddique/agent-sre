@@ -7,10 +7,8 @@ converted to OTEL signals without requiring a running collector.
 from __future__ import annotations
 
 import time
-import logging
 
 import pytest
-from opentelemetry import metrics, trace
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.sdk.trace import TracerProvider
@@ -40,17 +38,16 @@ class _InMemorySpanExporter(SpanExporter):
     def shutdown(self) -> None:
         self._stopped = True
 
-from agent_sre.integrations.otel import MetricsExporter, TraceExporter, EventLogger
+from agent_sre.integrations.otel import EventLogger, MetricsExporter, TraceExporter
 from agent_sre.integrations.otel.conventions import (
+    METRIC_COST_TOTAL,
+    METRIC_ERROR_BUDGET_REMAINING,
+    METRIC_LATENCY,
     METRIC_SLI_VALUE,
     METRIC_SLO_STATUS,
-    METRIC_ERROR_BUDGET_REMAINING,
-    METRIC_COST_TOTAL,
-    METRIC_LATENCY,
     SLO_STATUS_CODES,
 )
 from agent_sre.replay.capture import Span, SpanKind, SpanStatus, Trace
-
 
 # ========== Fixtures ==========
 
@@ -157,8 +154,8 @@ class TestMetricsExporter:
 
     def test_record_slo_from_object(self, metrics_exporter, metric_reader):
         """SLO object can be exported directly."""
-        from agent_sre.slo.objectives import SLO, ErrorBudget
         from agent_sre.slo.indicators import TaskSuccessRate
+        from agent_sre.slo.objectives import SLO, ErrorBudget
 
         slo = SLO(
             name="test-slo",
@@ -604,8 +601,8 @@ class TestOtelIntegration:
 
     def test_full_slo_workflow(self, metrics_exporter, metric_reader, event_logger):
         """Full SLO lifecycle: create, record, evaluate, export, alert."""
+        from agent_sre.slo.indicators import CostPerTask, TaskSuccessRate
         from agent_sre.slo.objectives import SLO, ErrorBudget
-        from agent_sre.slo.indicators import TaskSuccessRate, CostPerTask
 
         # Create SLO
         slo = SLO(
@@ -683,9 +680,9 @@ class TestOtelIntegration:
     def test_imports_from_package(self):
         """Public API is importable from the otel package."""
         from agent_sre.integrations.otel import (
+            EventLogger,
             MetricsExporter,
             TraceExporter,
-            EventLogger,
         )
 
         assert MetricsExporter is not None

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from agent_sre.certification import (
     CertificationEvaluator,
     CertificationResult,
@@ -11,7 +9,6 @@ from agent_sre.certification import (
     Criterion,
     CriterionResult,
 )
-
 
 # ---------------------------------------------------------------------------
 # Evidence fixtures

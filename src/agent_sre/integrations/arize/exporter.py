@@ -14,7 +14,7 @@ import logging
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +31,11 @@ class PhoenixSpan:
     start_time: float = 0.0
     end_time: float = 0.0
     status: str = "OK"  # OK, ERROR
-    attributes: Dict[str, Any] = field(default_factory=dict)
-    events: List[Dict[str, Any]] = field(default_factory=list)
+    attributes: dict[str, Any] = field(default_factory=dict)
+    events: list[dict[str, Any]] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
-        d: Dict[str, Any] = {
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
             "context": {
                 "span_id": self.span_id,
                 "trace_id": self.trace_id,
@@ -70,7 +70,7 @@ class PhoenixExporter:
 
     def __init__(
         self,
-        on_span: Optional[Any] = None,
+        on_span: Any | None = None,
         project_name: str = "agent-sre",
     ):
         """
@@ -81,7 +81,7 @@ class PhoenixExporter:
         """
         self._on_span = on_span
         self.project_name = project_name
-        self._spans: List[PhoenixSpan] = []
+        self._spans: list[PhoenixSpan] = []
 
     @property
     def is_offline(self) -> bool:
@@ -101,7 +101,7 @@ class PhoenixExporter:
         status: str,
         budget_remaining: float,
         burn_rate: float,
-        indicators: Optional[Dict[str, float]] = None,
+        indicators: dict[str, float] | None = None,
         trace_id: str = "",
     ) -> PhoenixSpan:
         """Export an SLO evaluation as a Phoenix EVALUATOR span."""
@@ -133,7 +133,7 @@ class PhoenixExporter:
         agent_id: str,
         task_id: str,
         cost_usd: float,
-        breakdown: Optional[Dict[str, float]] = None,
+        breakdown: dict[str, float] | None = None,
         trace_id: str = "",
     ) -> PhoenixSpan:
         """Export a cost record as a Phoenix span with cost attributes."""
@@ -189,13 +189,13 @@ class PhoenixExporter:
         return span
 
     @property
-    def spans(self) -> List[PhoenixSpan]:
+    def spans(self) -> list[PhoenixSpan]:
         return list(self._spans)
 
     def clear(self) -> None:
         self._spans.clear()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         return {
             "total_spans": len(self._spans),
             "evaluator_spans": sum(1 for s in self._spans if s.span_kind == "EVALUATOR"),

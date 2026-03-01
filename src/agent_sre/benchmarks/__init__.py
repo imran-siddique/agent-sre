@@ -26,8 +26,10 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ---------------------------------------------------------------------------
 # Enums
@@ -67,12 +69,12 @@ class BenchmarkScenario:
     name: str
     category: BenchmarkCategory
     description: str = ""
-    input_data: Dict[str, Any] = field(default_factory=dict)
+    input_data: dict[str, Any] = field(default_factory=dict)
     expected_output: Any = None
     timeout_seconds: float = 30.0
     max_cost_usd: float = 1.0
     validation_fn: Callable[[Any, Any], bool] | None = None
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     weight: float = 1.0  # Relative weight in scoring
 
     def validate(self, actual_output: Any) -> bool:
@@ -101,7 +103,7 @@ class ScenarioRun:
     error: str | None = None
     timestamp: float = field(default_factory=time.time)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "scenario": self.scenario_name,
             "category": self.category.value,
@@ -122,18 +124,18 @@ class BenchmarkSuite:
     def __init__(
         self,
         name: str = "default",
-        scenarios: List[BenchmarkScenario] | None = None,
+        scenarios: list[BenchmarkScenario] | None = None,
     ) -> None:
         self.name = name
-        self.scenarios: List[BenchmarkScenario] = scenarios or []
+        self.scenarios: list[BenchmarkScenario] = scenarios or []
 
     def add(self, scenario: BenchmarkScenario) -> None:
         self.scenarios.append(scenario)
 
-    def filter_by_category(self, category: BenchmarkCategory) -> List[BenchmarkScenario]:
+    def filter_by_category(self, category: BenchmarkCategory) -> list[BenchmarkScenario]:
         return [s for s in self.scenarios if s.category == category]
 
-    def filter_by_tag(self, tag: str) -> List[BenchmarkScenario]:
+    def filter_by_tag(self, tag: str) -> list[BenchmarkScenario]:
         return [s for s in self.scenarios if tag in s.tags]
 
     @property
@@ -274,9 +276,9 @@ class BenchmarkRunner:
 
     def run(
         self,
-        agent_fn: Callable[[Dict[str, Any]], Any],
-        categories: List[BenchmarkCategory] | None = None,
-        tags: List[str] | None = None,
+        agent_fn: Callable[[dict[str, Any]], Any],
+        categories: list[BenchmarkCategory] | None = None,
+        tags: list[str] | None = None,
     ) -> BenchmarkReport:
         """Run all (or filtered) scenarios.
 
@@ -296,7 +298,7 @@ class BenchmarkRunner:
             tag_set = set(tags)
             scenarios = [s for s in scenarios if tag_set & set(s.tags)]
 
-        runs: List[ScenarioRun] = []
+        runs: list[ScenarioRun] = []
         for scenario in scenarios:
             run = self._run_scenario(agent_fn, scenario)
             runs.append(run)
@@ -308,7 +310,7 @@ class BenchmarkRunner:
 
     def _run_scenario(
         self,
-        agent_fn: Callable[[Dict[str, Any]], Any],
+        agent_fn: Callable[[dict[str, Any]], Any],
         scenario: BenchmarkScenario,
     ) -> ScenarioRun:
         """Run a single scenario."""
@@ -382,7 +384,7 @@ class BenchmarkReport:
     """Summary report from a benchmark run."""
 
     suite_name: str
-    runs: List[ScenarioRun] = field(default_factory=list)
+    runs: list[ScenarioRun] = field(default_factory=list)
     timestamp: float = field(default_factory=time.time)
 
     @property
@@ -423,9 +425,9 @@ class BenchmarkReport:
     def total_cost_usd(self) -> float:
         return sum(r.cost_usd for r in self.runs)
 
-    def category_scores(self) -> Dict[str, float]:
+    def category_scores(self) -> dict[str, float]:
         """Score breakdown by category."""
-        by_cat: Dict[str, List[ScenarioRun]] = {}
+        by_cat: dict[str, list[ScenarioRun]] = {}
         for r in self.runs:
             key = r.category.value
             by_cat.setdefault(key, []).append(r)
@@ -434,11 +436,11 @@ class BenchmarkReport:
             for cat, runs in by_cat.items()
         }
 
-    def failures(self) -> List[ScenarioRun]:
+    def failures(self) -> list[ScenarioRun]:
         """Get all failed and errored runs."""
         return [r for r in self.runs if r.result in (ScenarioResult.FAILED, ScenarioResult.ERROR)]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "suite": self.suite_name,
             "total": self.total,

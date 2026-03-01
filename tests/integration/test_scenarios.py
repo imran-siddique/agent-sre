@@ -14,39 +14,36 @@ Cross-module scenarios that exercise the full SRE governance pipeline:
 from __future__ import annotations
 
 import pytest
-import time
 
-from agent_sre.slo.indicators import (
-    TaskSuccessRate,
-    ToolCallAccuracy,
-    ResponseLatency,
-    CostPerTask,
-    PolicyCompliance,
+from agent_sre.chaos.engine import (
+    ChaosExperiment,
+    ExperimentState,
+    Fault,
 )
-from agent_sre.slo.objectives import ErrorBudget, ExhaustionAction, SLO, SLOStatus
-from agent_sre.slo.dashboard import SLODashboard
-from agent_sre.incidents.detector import IncidentDetector, Signal, SignalType
+from agent_sre.cost.guard import CostGuard
 from agent_sre.incidents.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
     CircuitState,
 )
-from agent_sre.chaos.engine import (
-    ChaosExperiment,
-    ExperimentState,
-    Fault,
-    FaultType,
-)
-from agent_sre.cost.guard import CostGuard, AgentBudget
-from agent_sre.integrations.agent_os.bridge import (
-    AgentOSBridge,
-    AuditLogEntry,
-)
+from agent_sre.incidents.detector import IncidentDetector, SignalType
 from agent_sre.integrations.agent_mesh.bridge import (
     AgentMeshBridge,
     MeshEvent,
 )
-
+from agent_sre.integrations.agent_os.bridge import (
+    AgentOSBridge,
+    AuditLogEntry,
+)
+from agent_sre.slo.dashboard import SLODashboard
+from agent_sre.slo.indicators import (
+    CostPerTask,
+    PolicyCompliance,
+    ResponseLatency,
+    TaskSuccessRate,
+    ToolCallAccuracy,
+)
+from agent_sre.slo.objectives import SLO, ErrorBudget, SLOStatus
 
 # ---------------------------------------------------------------------------
 # Scenario 1: Policy Violation Cascade
@@ -84,7 +81,7 @@ class TestPolicyViolationCascade:
         assert summary["blocked_count"] == 0
 
         # Now 5 violations
-        for i in range(5):
+        for _i in range(5):
             entry = AuditLogEntry(
                 entry_type="blocked",
                 agent_id="did:mesh:rogue-agent",
@@ -174,7 +171,7 @@ class TestTrustDegradationFlow:
         for _ in range(10):
             mesh_bridge.trust_sli.record_trust(200, "did:mesh:bad")
 
-        slo = SLO(
+        SLO(
             name="trust-health",
             indicators=[mesh_bridge.trust_sli],
             error_budget=ErrorBudget(total=0.1),
@@ -189,9 +186,9 @@ class TestTrustDegradationFlow:
         mesh_bridge = AgentMeshBridge()
 
         # 10 handshakes: 7 success, 3 failure
-        for i in range(7):
+        for _i in range(7):
             mesh_bridge.handshake_sli.record_handshake(True)
-        for i in range(3):
+        for _i in range(3):
             mesh_bridge.handshake_sli.record_handshake(False)
 
         val = mesh_bridge.handshake_sli.current_value()
@@ -448,7 +445,7 @@ class TestFullGovernancePipeline:
         dashboard.register_slo(trust_slo)
 
         # === Phase 1: Normal Operation ===
-        for i in range(20):
+        for _i in range(20):
             success_sli.record_task(True)
             latency_sli.record_latency(200.0)
             agent_slo.record_event(True)

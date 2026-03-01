@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class HeliconeEvent:
 
     helicone_id: str
     event_type: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     timestamp: float = field(default_factory=time.time)
 
 
@@ -63,8 +63,8 @@ class HeliconeHeaders:
         self,
         session_name: str = "",
         user_id: str = "",
-        custom_properties: Dict[str, str] | None = None,
-    ) -> Dict[str, str]:
+        custom_properties: dict[str, str] | None = None,
+    ) -> dict[str, str]:
         """Generate Helicone-compatible HTTP headers.
 
         Args:
@@ -78,7 +78,7 @@ class HeliconeHeaders:
         if not self._enabled:
             return {}
 
-        headers: Dict[str, str] = {}
+        headers: dict[str, str] = {}
 
         if self._api_key:
             headers["Helicone-Auth"] = f"Bearer {self._api_key}"
@@ -124,7 +124,7 @@ class HeliconeLogger:
         self._api_key = api_key
         self._base_url = base_url
         self._offline = not bool(api_key)
-        self._events: List[HeliconeEvent] = []
+        self._events: list[HeliconeEvent] = []
 
     @property
     def is_offline(self) -> bool:
@@ -132,7 +132,7 @@ class HeliconeLogger:
         return self._offline
 
     @property
-    def logged_events(self) -> List[HeliconeEvent]:
+    def logged_events(self) -> list[HeliconeEvent]:
         """Get all logged events."""
         return list(self._events)
 
@@ -236,7 +236,7 @@ class HeliconeLogger:
         """Clear all logged events."""
         self._events.clear()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get statistics about logged events."""
         feedback_count = sum(1 for e in self._events if e.event_type == "feedback")
         slo_count = sum(1 for e in self._events if e.event_type == "slo_score")

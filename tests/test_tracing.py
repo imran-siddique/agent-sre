@@ -12,7 +12,6 @@ from opentelemetry.sdk.trace.export import (
     SpanExportResult,
 )
 
-
 # ---------------------------------------------------------------------------
 # In-memory span exporter for testing
 # ---------------------------------------------------------------------------
@@ -130,10 +129,6 @@ class TestConventions:
         from agent_sre.tracing import (
             AGENT_DID,
             AGENT_TASK,
-            DELEGATION,
-            LLM_INFERENCE,
-            POLICY_CHECK,
-            TOOL_CALL,
         )
 
         assert AGENT_DID == "agent.did"

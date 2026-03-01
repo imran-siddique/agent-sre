@@ -7,15 +7,18 @@ Prometheus naming conventions as required by AGENTS.md.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import TYPE_CHECKING
 
-from opentelemetry.metrics import (
-    Counter,
-    Histogram,
-    Meter,
-    ObservableGauge,
-    UpDownCounter,
-)
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from opentelemetry.metrics import (
+        Counter,
+        Histogram,
+        Meter,
+        ObservableGauge,
+        UpDownCounter,
+    )
 
 # ---------------------------------------------------------------------------
 # Metric name constants

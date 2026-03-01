@@ -5,7 +5,6 @@ Covers: EvalCriterion, Verdict, EvalInput, EvalResult, RulesJudge,
         JudgeProtocol, EvalSuite, EvalReport, EvaluationEngine.
 """
 
-import pytest
 
 from agent_sre.evals import (
     EvalCriterion,
@@ -18,7 +17,6 @@ from agent_sre.evals import (
     RulesJudge,
     Verdict,
 )
-
 
 # =============================================================================
 # Data Classes
@@ -542,7 +540,7 @@ class TestEvalsToSLI:
         from agent_sre.slo.indicators import HallucinationRate
 
         judge = RulesJudge()
-        engine = EvaluationEngine(judge)
+        EvaluationEngine(judge)
         sli = HallucinationRate(target=0.05)
 
         # Run evals and feed into SLI

@@ -15,7 +15,10 @@ import re
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class EvalCriterion(Enum):
@@ -48,8 +51,8 @@ class EvalInput:
     response: str
     reference: str = ""
     context: str = ""
-    tool_calls: List[Dict[str, Any]] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    tool_calls: list[dict[str, Any]] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -63,10 +66,10 @@ class EvalResult:
     confidence: float = 1.0
     latency_ms: float = 0.0
     judge_id: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "criterion": self.criterion.value,
             "verdict": self.verdict.value,
@@ -97,7 +100,7 @@ class RulesJudge:
 
     def __init__(self, judge_id: str = "rules-judge-v1") -> None:
         self._judge_id = judge_id
-        self._rules: Dict[EvalCriterion, List[Callable[[EvalInput], EvalResult]]] = {}
+        self._rules: dict[EvalCriterion, list[Callable[[EvalInput], EvalResult]]] = {}
 
     @property
     def judge_id(self) -> str:
@@ -304,12 +307,12 @@ class EvalSuite:
     """A suite of evaluation criteria to run against agent outputs."""
 
     name: str
-    criteria: List[EvalCriterion] = field(default_factory=list)
+    criteria: list[EvalCriterion] = field(default_factory=list)
     min_score: float = 0.7
-    required_criteria: List[EvalCriterion] = field(default_factory=list)
+    required_criteria: list[EvalCriterion] = field(default_factory=list)
 
     @classmethod
-    def default(cls) -> "EvalSuite":
+    def default(cls) -> EvalSuite:
         return cls(
             name="default",
             criteria=[EvalCriterion.CORRECTNESS, EvalCriterion.HALLUCINATION,
@@ -318,7 +321,7 @@ class EvalSuite:
         )
 
     @classmethod
-    def rag(cls) -> "EvalSuite":
+    def rag(cls) -> EvalSuite:
         return cls(
             name="rag",
             criteria=[EvalCriterion.CORRECTNESS, EvalCriterion.HALLUCINATION,
@@ -327,7 +330,7 @@ class EvalSuite:
         )
 
     @classmethod
-    def tool_agent(cls) -> "EvalSuite":
+    def tool_agent(cls) -> EvalSuite:
         return cls(
             name="tool_agent",
             criteria=[EvalCriterion.CORRECTNESS, EvalCriterion.TOOL_USE,
@@ -341,12 +344,12 @@ class EvalReport:
     """Complete evaluation report for an agent interaction."""
 
     suite_name: str
-    results: List[EvalResult] = field(default_factory=list)
+    results: list[EvalResult] = field(default_factory=list)
     overall_pass: bool = False
     overall_score: float = 0.0
     timestamp: float = field(default_factory=time.time)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "suite": self.suite_name,
             "overall_pass": self.overall_pass,
@@ -365,15 +368,15 @@ class EvaluationEngine:
 
     def __init__(self, judge: Any) -> None:
         self._judge = judge
-        self._history: List[EvalReport] = []
+        self._history: list[EvalReport] = []
 
     def run(
         self,
         eval_input: EvalInput,
-        suite: Optional[EvalSuite] = None,
+        suite: EvalSuite | None = None,
     ) -> EvalReport:
         suite = suite or EvalSuite.default()
-        results: List[EvalResult] = []
+        results: list[EvalResult] = []
 
         for criterion in suite.criteria:
             try:
@@ -411,13 +414,13 @@ class EvaluationEngine:
 
     def run_batch(
         self,
-        inputs: List[EvalInput],
-        suite: Optional[EvalSuite] = None,
-    ) -> List[EvalReport]:
+        inputs: list[EvalInput],
+        suite: EvalSuite | None = None,
+    ) -> list[EvalReport]:
         return [self.run(inp, suite) for inp in inputs]
 
     @property
-    def history(self) -> List[EvalReport]:
+    def history(self) -> list[EvalReport]:
         return list(self._history)
 
     def pass_rate(self) -> float:
@@ -425,8 +428,8 @@ class EvaluationEngine:
             return 0.0
         return sum(1 for r in self._history if r.overall_pass) / len(self._history)
 
-    def average_score(self, criterion: Optional[EvalCriterion] = None) -> float:
-        scores: List[float] = []
+    def average_score(self, criterion: EvalCriterion | None = None) -> float:
+        scores: list[float] = []
         for report in self._history:
             for result in report.results:
                 if result.verdict == Verdict.ABSTAIN:
@@ -435,7 +438,7 @@ class EvaluationEngine:
                     scores.append(result.score)
         return sum(scores) / len(scores) if scores else 0.0
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         return {
             "total_evaluations": len(self._history),
             "pass_rate": round(self.pass_rate(), 3),

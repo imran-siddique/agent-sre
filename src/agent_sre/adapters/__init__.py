@@ -38,7 +38,7 @@ class TaskRecord:
     tool_calls: int = 0
     tool_errors: int = 0
     steps: int = 0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def duration_ms(self) -> float:
@@ -57,11 +57,11 @@ class BaseAdapter:
 
     def __init__(self, framework: str) -> None:
         self.framework = framework
-        self._tasks: List[TaskRecord] = []
-        self._current: Optional[TaskRecord] = None
+        self._tasks: list[TaskRecord] = []
+        self._current: TaskRecord | None = None
         self._task_counter = 0
 
-    def _start_task(self, metadata: Optional[Dict[str, Any]] = None) -> TaskRecord:
+    def _start_task(self, metadata: dict[str, Any] | None = None) -> TaskRecord:
         self._task_counter += 1
         task = TaskRecord(
             task_id=f"{self.framework}-{self._task_counter}",
@@ -81,7 +81,7 @@ class BaseAdapter:
         raise RuntimeError("No task in progress")
 
     @property
-    def tasks(self) -> List[TaskRecord]:
+    def tasks(self) -> list[TaskRecord]:
         return list(self._tasks)
 
     @property
@@ -107,7 +107,7 @@ class BaseAdapter:
             return 1.0
         return 1.0 - (errors / total)
 
-    def get_sli_snapshot(self) -> Dict[str, Any]:
+    def get_sli_snapshot(self) -> dict[str, Any]:
         """Get current SLI values for integration with SLO engine."""
         return {
             "task_success_rate": self.task_success_rate,
@@ -204,7 +204,7 @@ class CrewAIAdapter(BaseAdapter):
 
     def __init__(self) -> None:
         super().__init__("crewai")
-        self._agent_tasks: List[Dict[str, Any]] = []
+        self._agent_tasks: list[dict[str, Any]] = []
 
     def on_crew_start(self, crew_name: str = "", num_agents: int = 0) -> TaskRecord:
         self._agent_tasks.clear()
@@ -315,7 +315,7 @@ class OpenAIAgentsAdapter(BaseAdapter):
 
     def __init__(self) -> None:
         super().__init__("openai_agents")
-        self._handoffs: List[Dict[str, str]] = []
+        self._handoffs: list[dict[str, str]] = []
         self._guardrail_checks: int = 0
         self._guardrail_failures: int = 0
 
@@ -353,7 +353,7 @@ class OpenAIAgentsAdapter(BaseAdapter):
     def on_run_end(self, success: bool = True, error: str = "") -> TaskRecord:
         return self._finish_task(success=success, error=error)
 
-    def get_sli_snapshot(self) -> Dict[str, Any]:
+    def get_sli_snapshot(self) -> dict[str, Any]:
         snapshot = super().get_sli_snapshot()
         snapshot["guardrail_pass_rate"] = (
             1.0 - (self._guardrail_failures / self._guardrail_checks)
@@ -380,7 +380,7 @@ class SemanticKernelAdapter(BaseAdapter):
 
     def __init__(self) -> None:
         super().__init__("semantic_kernel")
-        self._plugin_calls: List[Dict[str, Any]] = []
+        self._plugin_calls: list[dict[str, Any]] = []
 
     def on_kernel_start(self, kernel_name: str = "", **kwargs: Any) -> TaskRecord:
         self._plugin_calls.clear()
@@ -418,7 +418,7 @@ class SemanticKernelAdapter(BaseAdapter):
     def on_kernel_end(self, success: bool = True, error: str = "") -> TaskRecord:
         return self._finish_task(success=success, error=error)
 
-    def get_sli_snapshot(self) -> Dict[str, Any]:
+    def get_sli_snapshot(self) -> dict[str, Any]:
         snapshot = super().get_sli_snapshot()
         snapshot["total_plugin_calls"] = len(self._plugin_calls)
         return snapshot
@@ -442,7 +442,7 @@ class DifyAdapter(BaseAdapter):
 
     def __init__(self) -> None:
         super().__init__("dify")
-        self._node_types: Dict[str, str] = {}
+        self._node_types: dict[str, str] = {}
 
     def on_workflow_start(self, workflow_name: str = "", **kwargs: Any) -> TaskRecord:
         self._node_types.clear()
@@ -479,7 +479,7 @@ class DifyAdapter(BaseAdapter):
     def on_workflow_end(self, success: bool = True, error: str = "") -> TaskRecord:
         return self._finish_task(success=success, error=error)
 
-    def get_sli_snapshot(self) -> Dict[str, Any]:
+    def get_sli_snapshot(self) -> dict[str, Any]:
         snapshot = super().get_sli_snapshot()
         snapshot["node_type_counts"] = {}
         for nt in self._node_types.values():

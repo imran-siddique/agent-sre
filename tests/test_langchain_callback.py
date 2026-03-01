@@ -6,20 +6,11 @@ No real LangChain dependency — simulates callback events directly.
 Run with: python -m pytest tests/test_langchain_callback.py -v --tb=short
 """
 
-import time
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock
-
-import pytest
 
 from agent_sre.integrations.langchain.callback import (
     AgentSRECallback,
-    ChainRecord,
-    LLMCallRecord,
-    ToolCallRecord,
 )
-
 
 # =============================================================================
 # Helpers: simulate LangChain callback events
@@ -33,7 +24,7 @@ def _simulate_llm_call(
     prompt_tokens: int = 100,
     completion_tokens: int = 50,
     duration_ms: float = 200,
-    error: Optional[str] = None,
+    error: str | None = None,
 ) -> None:
     """Simulate on_llm_start → on_llm_end (or on_llm_error)."""
     serialized = {"name": model, "id": ["langchain", "llms", model]}
@@ -57,7 +48,7 @@ def _simulate_tool_call(
     cb: AgentSRECallback,
     run_id: str = "tool-1",
     tool_name: str = "search",
-    error: Optional[str] = None,
+    error: str | None = None,
 ) -> None:
     """Simulate on_tool_start → on_tool_end (or on_tool_error)."""
     serialized = {"name": tool_name}
@@ -73,7 +64,7 @@ def _simulate_chain(
     cb: AgentSRECallback,
     run_id: str = "chain-1",
     chain_type: str = "RetrievalQA",
-    error: Optional[str] = None,
+    error: str | None = None,
 ) -> None:
     """Simulate on_chain_start → on_chain_end (or on_chain_error)."""
     serialized = {"name": chain_type}

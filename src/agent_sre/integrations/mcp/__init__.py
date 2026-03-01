@@ -47,8 +47,8 @@ class ToolSchema:
 
     name: str
     description: str = ""
-    parameters: Dict[str, Any] = field(default_factory=dict)
-    required: List[str] = field(default_factory=list)
+    parameters: dict[str, Any] = field(default_factory=dict)
+    required: list[str] = field(default_factory=list)
 
     def fingerprint(self) -> str:
         """Content hash for change detection."""
@@ -60,7 +60,7 @@ class ToolSchema:
         }, sort_keys=True)
         return hashlib.sha256(content.encode()).hexdigest()[:16]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "description": self.description,
@@ -69,7 +69,7 @@ class ToolSchema:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ToolSchema":
+    def from_dict(cls, data: dict[str, Any]) -> ToolSchema:
         return cls(
             name=data.get("name", ""),
             description=data.get("description", ""),
@@ -83,15 +83,15 @@ class ToolSnapshot:
     """Point-in-time snapshot of an MCP server's tool manifest."""
 
     server_id: str
-    tools: List[ToolSchema] = field(default_factory=list)
+    tools: list[ToolSchema] = field(default_factory=list)
     timestamp: float = field(default_factory=time.time)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
-    def tool_names(self) -> Set[str]:
+    def tool_names(self) -> set[str]:
         return {t.name for t in self.tools}
 
-    def get_tool(self, name: str) -> Optional[ToolSchema]:
+    def get_tool(self, name: str) -> ToolSchema | None:
         for t in self.tools:
             if t.name == name:
                 return t
@@ -102,7 +102,7 @@ class ToolSnapshot:
         parts = sorted(t.fingerprint() for t in self.tools)
         return hashlib.sha256("|".join(parts).encode()).hexdigest()[:16]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "server_id": self.server_id,
             "tools": [t.to_dict() for t in self.tools],
@@ -119,10 +119,10 @@ class DriftAlert:
     severity: DriftSeverity
     tool_name: str
     message: str
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "drift_type": self.drift_type.value,
             "severity": self.severity.value,
@@ -139,7 +139,7 @@ class DriftReport:
     server_id: str
     baseline_fingerprint: str
     current_fingerprint: str
-    alerts: List[DriftAlert] = field(default_factory=list)
+    alerts: list[DriftAlert] = field(default_factory=list)
     has_drift: bool = False
     timestamp: float = field(default_factory=time.time)
 
@@ -151,7 +151,7 @@ class DriftReport:
     def warning_count(self) -> int:
         return sum(1 for a in self.alerts if a.severity == DriftSeverity.WARNING)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "server_id": self.server_id,
             "has_drift": self.has_drift,
@@ -182,14 +182,14 @@ class DriftDetector:
     """
 
     def __init__(self) -> None:
-        self._baselines: Dict[str, ToolSnapshot] = {}
-        self._history: List[DriftReport] = []
+        self._baselines: dict[str, ToolSnapshot] = {}
+        self._history: list[DriftReport] = []
 
     def set_baseline(self, snapshot: ToolSnapshot) -> None:
         """Set the baseline snapshot for a server."""
         self._baselines[snapshot.server_id] = snapshot
 
-    def get_baseline(self, server_id: str) -> Optional[ToolSnapshot]:
+    def get_baseline(self, server_id: str) -> ToolSnapshot | None:
         return self._baselines.get(server_id)
 
     def compare(self, current: ToolSnapshot) -> DriftReport:
@@ -208,7 +208,7 @@ class DriftDetector:
             self._history.append(report)
             return report
 
-        alerts: List[DriftAlert] = []
+        alerts: list[DriftAlert] = []
 
         # Check for removed tools
         removed = baseline.tool_names - current.tool_names
@@ -250,9 +250,9 @@ class DriftDetector:
 
     def _compare_tool(
         self, name: str, old: ToolSchema, new: ToolSchema
-    ) -> List[DriftAlert]:
+    ) -> list[DriftAlert]:
         """Compare two versions of the same tool."""
-        alerts: List[DriftAlert] = []
+        alerts: list[DriftAlert] = []
 
         # Description change
         if old.description != new.description:
@@ -329,10 +329,10 @@ class DriftDetector:
         self._baselines[snapshot.server_id] = snapshot
 
     @property
-    def history(self) -> List[DriftReport]:
+    def history(self) -> list[DriftReport]:
         return list(self._history)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         return {
             "servers_tracked": len(self._baselines),
             "total_comparisons": len(self._history),

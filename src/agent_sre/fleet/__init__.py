@@ -31,7 +31,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set
 
-
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
@@ -67,7 +66,7 @@ class AgentEvent:
     success: bool = True
     latency_ms: float = 0.0
     cost_usd: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -75,12 +74,12 @@ class AgentRegistration:
     """Registration record for a single agent."""
 
     agent_id: str
-    tags: Dict[str, str] = field(default_factory=dict)
+    tags: dict[str, str] = field(default_factory=dict)
     registered_at: float = field(default_factory=time.time)
     last_heartbeat: float = field(default_factory=time.time)
     state: AgentState = AgentState.ACTIVE
     slo: Any = None  # Optional SLO object
-    events: List[AgentEvent] = field(default_factory=list)
+    events: list[AgentEvent] = field(default_factory=list)
     heartbeat_timeout_seconds: float = 300.0  # 5 minutes
 
     @property
@@ -115,7 +114,7 @@ class AgentRegistration:
     def total_cost_usd(self) -> float:
         return sum(e.cost_usd for e in self.events)
 
-    def recent_events(self, window_seconds: float = 3600) -> List[AgentEvent]:
+    def recent_events(self, window_seconds: float = 3600) -> list[AgentEvent]:
         """Events within the last N seconds."""
         cutoff = time.time() - window_seconds
         return [e for e in self.events if e.timestamp >= cutoff]
@@ -133,10 +132,10 @@ class AgentHealth:
     total_cost_usd: float
     event_count: int
     uptime_seconds: float
-    tags: Dict[str, str]
+    tags: dict[str, str]
     slo_status: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "agent_id": self.agent_id,
             "state": self.state.value,
@@ -164,9 +163,9 @@ class FleetStatus:
     fleet_avg_latency_ms: float | None
     fleet_total_cost_usd: float
     total_events: int
-    agents: List[AgentHealth] = field(default_factory=list)
+    agents: list[AgentHealth] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "health": self.health.value,
             "total_agents": self.total_agents,
@@ -197,7 +196,7 @@ class FleetManager:
         heartbeat_timeout: float = 300.0,
         success_rate_threshold: float = 0.9,
     ) -> None:
-        self._agents: Dict[str, AgentRegistration] = {}
+        self._agents: dict[str, AgentRegistration] = {}
         self._heartbeat_timeout = heartbeat_timeout
         self._success_rate_threshold = success_rate_threshold
 
@@ -206,7 +205,7 @@ class FleetManager:
     def register(
         self,
         agent_id: str,
-        tags: Dict[str, str] | None = None,
+        tags: dict[str, str] | None = None,
         slo: Any = None,
         heartbeat_timeout: float | None = None,
     ) -> AgentRegistration:
@@ -232,7 +231,7 @@ class FleetManager:
         return self._agents.get(agent_id)
 
     @property
-    def agent_ids(self) -> List[str]:
+    def agent_ids(self) -> list[str]:
         return list(self._agents.keys())
 
     @property
@@ -259,7 +258,7 @@ class FleetManager:
         success: bool = True,
         latency_ms: float = 0.0,
         cost_usd: float = 0.0,
-        metadata: Dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> bool:
         """Record a task event for an agent. Returns False if agent not found."""
         reg = self._agents.get(agent_id)
@@ -344,9 +343,9 @@ class FleetManager:
                 total_events=0,
             )
 
-        agents_health: List[AgentHealth] = []
+        agents_health: list[AgentHealth] = []
         active = degraded = unresponsive = 0
-        all_events: List[AgentEvent] = []
+        all_events: list[AgentEvent] = []
 
         for reg in self._agents.values():
             health = self.agent_health(reg.agent_id)
@@ -397,23 +396,23 @@ class FleetManager:
 
     # -- Filtering --
 
-    def agents_by_tag(self, key: str, value: str) -> List[str]:
+    def agents_by_tag(self, key: str, value: str) -> list[str]:
         """Find agent IDs matching a tag key-value pair."""
         return [
             aid for aid, reg in self._agents.items()
             if reg.tags.get(key) == value
         ]
 
-    def agents_by_state(self, state: AgentState) -> List[str]:
+    def agents_by_state(self, state: AgentState) -> list[str]:
         """Find agent IDs in a given state."""
         return [aid for aid, reg in self._agents.items() if reg.state == state]
 
-    def top_cost_agents(self, n: int = 5) -> List[tuple[str, float]]:
+    def top_cost_agents(self, n: int = 5) -> list[tuple[str, float]]:
         """Get top-N agents by total cost."""
         costs = [(aid, reg.total_cost_usd) for aid, reg in self._agents.items()]
         costs.sort(key=lambda x: x[1], reverse=True)
         return costs[:n]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Full fleet state as dictionary."""
         return self.status().to_dict()

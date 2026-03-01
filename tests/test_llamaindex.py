@@ -6,17 +6,11 @@ No real LlamaIndex dependency — simulates callback events directly.
 Run with: python -m pytest tests/test_llamaindex.py -v --tb=short
 """
 
-from typing import Any, Optional
 
-import pytest
 
 from agent_sre.integrations.llamaindex.handler import (
     AgentSRELlamaIndexHandler,
-    LLMCallRecord,
-    QueryRecord,
-    RetrieverRecord,
 )
-
 
 # =============================================================================
 # Helpers: simulate LlamaIndex callback events
@@ -26,7 +20,7 @@ from agent_sre.integrations.llamaindex.handler import (
 def _simulate_query(
     handler: AgentSRELlamaIndexHandler,
     query_str: str = "test query",
-    error: Optional[str] = None,
+    error: str | None = None,
 ) -> None:
     """Simulate on_query_start → on_query_end (or on_query_error)."""
     handler.on_query_start(query_str)
@@ -41,7 +35,7 @@ def _simulate_llm_call(
     prompt: str = "test prompt",
     input_tokens: int = 100,
     output_tokens: int = 50,
-    error: Optional[str] = None,
+    error: str | None = None,
 ) -> None:
     """Simulate on_llm_start → on_llm_end (or on_llm_error)."""
     handler.on_llm_start(prompt)
@@ -59,7 +53,7 @@ def _simulate_retriever_call(
     handler: AgentSRELlamaIndexHandler,
     query: str = "test query",
     num_nodes: int = 3,
-    error: Optional[str] = None,
+    error: str | None = None,
 ) -> None:
     """Simulate on_retriever_start → on_retriever_end (or on_retriever_error)."""
     handler.on_retriever_start(query)

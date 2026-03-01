@@ -190,7 +190,7 @@ class TraceVisualizer:
 
     def build_decision_tree(self, trace: Trace) -> dict[str, Any]:
         """Build a decision tree showing branching logic."""
-        span_map = {s.span_id: s for s in trace.spans}
+        {s.span_id: s for s in trace.spans}
         roots = trace.root_spans()
 
         def _build_subtree(span: Span) -> dict[str, Any]:

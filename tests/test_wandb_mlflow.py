@@ -2,9 +2,8 @@
 
 import pytest
 
+from agent_sre.integrations.mlflow.exporter import MLflowArtifact, MLflowExporter, MLflowRun
 from agent_sre.integrations.wandb.exporter import WandBExporter, WandBRun
-from agent_sre.integrations.mlflow.exporter import MLflowExporter, MLflowRun, MLflowArtifact
-
 
 # ---------------------------------------------------------------------------
 # W&B Exporter Tests

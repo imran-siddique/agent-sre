@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-import math
 from collections import Counter
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 from agent_sre.anomaly.detector import AnomalySeverity, BehaviorBaseline
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class StatisticalStrategy:
@@ -140,15 +142,13 @@ class ResourceStrategy:
         Returns (is_anomaly, score).
         """
         # Check explicit budgets
-        if self.token_budget is not None and "token" in metric_name.lower():
-            if value > self.token_budget:
-                score = value / self.token_budget if self.token_budget > 0 else 1.0
-                return True, score
+        if self.token_budget is not None and "token" in metric_name.lower() and value > self.token_budget:
+            score = value / self.token_budget if self.token_budget > 0 else 1.0
+            return True, score
 
-        if self.api_rate_limit is not None and "api" in metric_name.lower():
-            if value > self.api_rate_limit:
-                score = value / self.api_rate_limit if self.api_rate_limit > 0 else 1.0
-                return True, score
+        if self.api_rate_limit is not None and "api" in metric_name.lower() and value > self.api_rate_limit:
+            score = value / self.api_rate_limit if self.api_rate_limit > 0 else 1.0
+            return True, score
 
         # Check against p99 baseline
         if baseline.sample_count > 0 and baseline.p99 > 0:

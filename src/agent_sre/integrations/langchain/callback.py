@@ -28,9 +28,8 @@ from __future__ import annotations
 
 import logging
 import time
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Sequence, Union
-from uuid import UUID
+from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -117,14 +116,14 @@ class AgentSRECallback:
         self.name = name
 
         # Records
-        self._llm_calls: List[LLMCallRecord] = []
-        self._tool_calls: List[ToolCallRecord] = []
-        self._chains: List[ChainRecord] = []
+        self._llm_calls: list[LLMCallRecord] = []
+        self._tool_calls: list[ToolCallRecord] = []
+        self._chains: list[ChainRecord] = []
 
         # Active runs (keyed by run_id string)
-        self._active_llm: Dict[str, LLMCallRecord] = {}
-        self._active_tools: Dict[str, ToolCallRecord] = {}
-        self._active_chains: Dict[str, ChainRecord] = {}
+        self._active_llm: dict[str, LLMCallRecord] = {}
+        self._active_tools: dict[str, ToolCallRecord] = {}
+        self._active_chains: dict[str, ChainRecord] = {}
 
     # ------------------------------------------------------------------
     # Helpers
@@ -147,10 +146,10 @@ class AgentSRECallback:
 
     def on_llm_start(
         self,
-        serialized: Dict[str, Any],
-        prompts: List[str],
+        serialized: dict[str, Any],
+        prompts: list[str],
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Called when LLM starts generating."""
@@ -165,7 +164,7 @@ class AgentSRECallback:
         self,
         response: Any,
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Called when LLM finishes generating."""
@@ -189,7 +188,7 @@ class AgentSRECallback:
         self,
         error: BaseException,
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Called when LLM errors out."""
@@ -207,10 +206,10 @@ class AgentSRECallback:
 
     def on_tool_start(
         self,
-        serialized: Dict[str, Any],
+        serialized: dict[str, Any],
         input_str: str,
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Called when a tool starts executing."""
@@ -223,7 +222,7 @@ class AgentSRECallback:
         self,
         output: str,
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Called when a tool finishes executing."""
@@ -239,7 +238,7 @@ class AgentSRECallback:
         self,
         error: BaseException,
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Called when a tool errors out."""
@@ -258,10 +257,10 @@ class AgentSRECallback:
 
     def on_chain_start(
         self,
-        serialized: Dict[str, Any],
-        inputs: Dict[str, Any],
+        serialized: dict[str, Any],
+        inputs: dict[str, Any],
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Called when a chain starts executing."""
@@ -274,9 +273,9 @@ class AgentSRECallback:
 
     def on_chain_end(
         self,
-        outputs: Dict[str, Any],
+        outputs: dict[str, Any],
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Called when a chain finishes executing."""
@@ -292,7 +291,7 @@ class AgentSRECallback:
         self,
         error: BaseException,
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Called when a chain errors out."""
@@ -386,18 +385,18 @@ class AgentSRECallback:
     # ------------------------------------------------------------------
 
     @property
-    def llm_calls(self) -> List[LLMCallRecord]:
+    def llm_calls(self) -> list[LLMCallRecord]:
         return list(self._llm_calls)
 
     @property
-    def tool_calls(self) -> List[ToolCallRecord]:
+    def tool_calls(self) -> list[ToolCallRecord]:
         return list(self._tool_calls)
 
     @property
-    def chains(self) -> List[ChainRecord]:
+    def chains(self) -> list[ChainRecord]:
         return list(self._chains)
 
-    def get_sli_snapshot(self) -> Dict[str, Any]:
+    def get_sli_snapshot(self) -> dict[str, Any]:
         """Return all SLI values as a dict (for recording into Agent-SRE SLO)."""
         return {
             "task_success_rate": self.task_success_rate,

@@ -6,6 +6,7 @@ import time
 
 import pytest
 
+from agent_sre.replay.capture import SpanKind, SpanStatus
 from agent_sre.tracing import (
     ProtocolSpan,
     ProtocolTimelineEntry,
@@ -14,10 +15,7 @@ from agent_sre.tracing import (
     SpanLink,
     SpanRole,
     TraceContext,
-    TracingReport,
 )
-from agent_sre.replay.capture import SpanKind, SpanStatus
-
 
 # ---------------------------------------------------------------------------
 # TraceContext
@@ -217,9 +215,8 @@ class TestProtocolTracerA2A:
 
     def test_a2a_call_error_propagates(self):
         tracer = ProtocolTracer(agent_id="orchestrator")
-        with pytest.raises(RuntimeError, match="agent down"):
-            with tracer.a2a_call("worker", task="fail") as span:
-                raise RuntimeError("agent down")
+        with pytest.raises(RuntimeError, match="agent down"), tracer.a2a_call("worker", task="fail") as span:
+            raise RuntimeError("agent down")
         assert span.span.status == SpanStatus.ERROR
         assert span.span.error == "agent down"
 
@@ -261,9 +258,8 @@ class TestProtocolTracerMCP:
 
     def test_mcp_call_error(self):
         tracer = ProtocolTracer(agent_id="agent-1")
-        with pytest.raises(ConnectionError):
-            with tracer.mcp_call("broken-server", tool="fail") as span:
-                raise ConnectionError("server unreachable")
+        with pytest.raises(ConnectionError), tracer.mcp_call("broken-server", tool="fail") as span:
+            raise ConnectionError("server unreachable")
         assert span.span.status == SpanStatus.ERROR
 
     def test_mcp_span_has_tool_call_kind(self):

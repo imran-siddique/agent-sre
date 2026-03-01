@@ -10,7 +10,7 @@ import logging
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +21,9 @@ class SessionRecord:
 
     session_id: str
     agent_id: str
-    tags: List[str]
+    tags: list[str]
     start_time: float
-    end_time: Optional[float] = None
+    end_time: float | None = None
     end_state: str = ""
 
 
@@ -33,7 +33,7 @@ class EventRecord:
 
     session_id: str
     event_type: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     timestamp: float = field(default_factory=time.time)
 
 
@@ -49,8 +49,8 @@ class AgentOpsExporter:
         self._api_key = api_key
         self._project_name = project_name
         self._offline = not api_key
-        self._sessions: List[SessionRecord] = []
-        self._events: List[EventRecord] = []
+        self._sessions: list[SessionRecord] = []
+        self._events: list[EventRecord] = []
 
     @property
     def is_offline(self) -> bool:
@@ -58,19 +58,19 @@ class AgentOpsExporter:
         return self._offline
 
     @property
-    def sessions(self) -> List[SessionRecord]:
+    def sessions(self) -> list[SessionRecord]:
         """Get recorded sessions."""
         return list(self._sessions)
 
     @property
-    def events(self) -> List[EventRecord]:
+    def events(self) -> list[EventRecord]:
         """Get recorded events."""
         return list(self._events)
 
     def start_session(
         self,
         agent_id: str,
-        tags: Optional[List[str]] = None,
+        tags: list[str] | None = None,
     ) -> SessionRecord:
         """Start a new session.
 
@@ -95,7 +95,7 @@ class AgentOpsExporter:
         session_id: str,
         success: bool = True,
         end_state: str = "success",
-    ) -> Optional[SessionRecord]:
+    ) -> SessionRecord | None:
         """End a session.
 
         Args:
@@ -117,7 +117,7 @@ class AgentOpsExporter:
         self,
         session_id: str,
         event_type: str,
-        data: Optional[Dict[str, Any]] = None,
+        data: dict[str, Any] | None = None,
     ) -> EventRecord:
         """Record an event in a session.
 
@@ -148,7 +148,7 @@ class AgentOpsExporter:
             The created EventRecord.
         """
         status = slo.evaluate()
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "slo_name": slo.name,
             "status": status.value,
             "budget_remaining": slo.error_budget.remaining,
@@ -186,7 +186,7 @@ class AgentOpsExporter:
         self._sessions.clear()
         self._events.clear()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get exporter statistics."""
         return {
             "project_name": self._project_name,

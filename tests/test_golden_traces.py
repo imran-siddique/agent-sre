@@ -2,19 +2,18 @@
 
 from __future__ import annotations
 
-import tempfile
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from agent_sre.replay.capture import Span, SpanKind, Trace
 from agent_sre.replay.golden import (
-    GoldenTrace,
     GoldenTraceSuite,
     TraceSource,
     load_golden_suites,
 )
 from agent_sre.replay.golden_manager import GoldenTraceManager
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -1,10 +1,7 @@
 """Tests for trace visualization."""
 
-from agent_sre.replay.capture import Span, SpanKind, SpanStatus, Trace
+from agent_sre.replay.capture import Span, SpanKind, Trace
 from agent_sre.replay.visualization import (
-    ExecutionGraph,
-    GraphEdge,
-    GraphNode,
     TraceVisualizer,
 )
 

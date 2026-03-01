@@ -9,9 +9,8 @@ from __future__ import annotations
 import pytest
 
 from agent_sre.integrations.datadog import DatadogExporter
+from agent_sre.slo.indicators import CostPerTask, TaskSuccessRate
 from agent_sre.slo.objectives import SLO, ErrorBudget
-from agent_sre.slo.indicators import TaskSuccessRate, CostPerTask
-
 
 # ========== Fixtures ==========
 

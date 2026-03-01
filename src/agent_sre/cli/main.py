@@ -10,11 +10,10 @@ Usage:
 
 import argparse
 import json
-import sys
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
-def cli(args: Optional[List[str]] = None) -> int:
+def cli(args: list[str] | None = None) -> int:
     """Main CLI entry point. Returns exit code."""
     parser = argparse.ArgumentParser(
         prog="agent-sre",
@@ -46,7 +45,7 @@ def cli(args: Optional[List[str]] = None) -> int:
         return 0
 
     if parsed.command == "info":
-        info: Dict[str, Any] = {
+        info: dict[str, Any] = {
             "name": "agent-sre",
             "version": "0.1.0",
             "engines": ["slo", "cost", "chaos", "delivery", "replay", "incidents"],

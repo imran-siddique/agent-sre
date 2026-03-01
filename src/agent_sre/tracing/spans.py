@@ -7,9 +7,7 @@ remember attribute keys.
 
 from __future__ import annotations
 
-from typing import Any
-
-from opentelemetry.trace import Span, Tracer
+from typing import TYPE_CHECKING, Any
 
 from agent_sre.tracing.conventions import (
     AGENT_DELEGATION_FROM,
@@ -26,6 +24,9 @@ from agent_sre.tracing.conventions import (
     POLICY_CHECK,
     TOOL_CALL,
 )
+
+if TYPE_CHECKING:
+    from opentelemetry.trace import Span, Tracer
 
 
 def start_agent_task_span(

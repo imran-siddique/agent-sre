@@ -6,8 +6,6 @@ instances with BatchSpanProcessor for gRPC, HTTP, and console export.
 
 from __future__ import annotations
 
-from typing import Dict, Sequence
-
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
@@ -24,7 +22,7 @@ def _build_resource(service_name: str = "agent-sre") -> Resource:
 
 def configure_otlp_grpc(
     endpoint: str = "localhost:4317",
-    headers: Dict[str, str] | None = None,
+    headers: dict[str, str] | None = None,
     insecure: bool = True,
     service_name: str = "agent-sre",
 ) -> TracerProvider:
@@ -60,7 +58,7 @@ def configure_otlp_grpc(
 
 def configure_otlp_http(
     endpoint: str = "http://localhost:4318/v1/traces",
-    headers: Dict[str, str] | None = None,
+    headers: dict[str, str] | None = None,
     service_name: str = "agent-sre",
 ) -> TracerProvider:
     """Configure a TracerProvider exporting via OTLP/HTTP.

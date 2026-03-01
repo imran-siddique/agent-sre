@@ -8,4 +8,5 @@ Usage:
     print(exporter.render())  # Prometheus text format
 """
 from agent_sre.integrations.prometheus.exporter import PrometheusExporter
+
 __all__ = ["PrometheusExporter"]

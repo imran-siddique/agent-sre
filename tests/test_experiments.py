@@ -6,8 +6,6 @@ Covers: Experiment, Variant, MetricSummary, statistical analysis.
 
 import random
 
-import pytest
-
 from agent_sre.experiments import (
     Experiment,
     ExperimentStatus,

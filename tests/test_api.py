@@ -12,8 +12,7 @@ import pytest
 
 from agent_sre.api import AgentSREServer, APIState, CostSnapshot
 from agent_sre.slo.indicators import TaskSuccessRate
-from agent_sre.slo.objectives import ErrorBudget, SLO
-
+from agent_sre.slo.objectives import SLO, ErrorBudget
 
 # ---------------------------------------------------------------------------
 # Helpers

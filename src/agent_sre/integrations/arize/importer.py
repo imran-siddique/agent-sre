@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 @dataclass
@@ -25,10 +25,10 @@ class EvaluationRecord:
     explanation: str = ""
     trace_id: str = ""
     span_id: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "eval_name": self.eval_name,
             "label": self.label,
@@ -74,9 +74,9 @@ class EvaluationImporter:
     """
 
     def __init__(self) -> None:
-        self._records: List[EvaluationRecord] = []
+        self._records: list[EvaluationRecord] = []
 
-    def import_evaluation(self, data: Dict[str, Any]) -> EvaluationRecord:
+    def import_evaluation(self, data: dict[str, Any]) -> EvaluationRecord:
         """
         Import a single evaluation result.
 
@@ -98,31 +98,31 @@ class EvaluationImporter:
         self._records.append(record)
         return record
 
-    def import_batch(self, evaluations: List[Dict[str, Any]]) -> List[EvaluationRecord]:
+    def import_batch(self, evaluations: list[dict[str, Any]]) -> list[EvaluationRecord]:
         """Import a batch of evaluations."""
         return [self.import_evaluation(e) for e in evaluations]
 
-    def get_sli_values(self) -> Dict[str, List[float]]:
+    def get_sli_values(self) -> dict[str, list[float]]:
         """
         Convert imported evaluations to SLI-compatible values.
 
         Returns dict mapping SLI type names to lists of float values.
         """
-        sli_values: Dict[str, List[float]] = {}
+        sli_values: dict[str, list[float]] = {}
         for record in self._records:
             sli_type = _EVAL_TO_SLI_MAP.get(record.eval_name)
             if sli_type:
                 sli_values.setdefault(sli_type, []).append(record.score)
         return sli_values
 
-    def get_records(self, eval_name: Optional[str] = None) -> List[EvaluationRecord]:
+    def get_records(self, eval_name: str | None = None) -> list[EvaluationRecord]:
         """Get imported records, optionally filtered by eval name."""
         if eval_name:
             return [r for r in self._records if r.eval_name == eval_name]
         return list(self._records)
 
-    def get_stats(self) -> Dict[str, Any]:
-        by_eval: Dict[str, int] = {}
+    def get_stats(self) -> dict[str, Any]:
+        by_eval: dict[str, int] = {}
         for r in self._records:
             by_eval[r.eval_name] = by_eval.get(r.eval_name, 0) + 1
         return {

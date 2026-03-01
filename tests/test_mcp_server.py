@@ -2,7 +2,7 @@
 
 import pytest
 
-from agent_sre.mcp.server import AgentSREServer, MCPToolDefinition, MCPToolResult
+from agent_sre.mcp.server import AgentSREServer
 from agent_sre.slo.indicators import TaskSuccessRate
 from agent_sre.slo.objectives import SLO, ErrorBudget
 

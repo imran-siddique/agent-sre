@@ -5,7 +5,6 @@ Covers: PhoenixExporter, PhoenixSpan, EvaluationImporter, EvaluationRecord.
 No external dependencies.
 """
 
-import pytest
 
 from agent_sre.integrations.arize import (
     EvaluationImporter,
@@ -13,7 +12,6 @@ from agent_sre.integrations.arize import (
     PhoenixExporter,
     PhoenixSpan,
 )
-
 
 # =============================================================================
 # PhoenixSpan
@@ -281,8 +279,10 @@ class TestIntegration:
 
     def test_imports_from_package(self):
         from agent_sre.integrations.arize import (
-            PhoenixExporter, PhoenixSpan,
-            EvaluationImporter, EvaluationRecord,
+            EvaluationImporter,
+            EvaluationRecord,
+            PhoenixExporter,
+            PhoenixSpan,
         )
         assert all(c is not None for c in [
             PhoenixExporter, PhoenixSpan, EvaluationImporter, EvaluationRecord,

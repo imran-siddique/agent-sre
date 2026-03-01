@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +19,9 @@ class WandBRun:
     """A W&B run record."""
 
     name: str
-    metrics: Dict[str, Any]
-    config: Dict[str, Any]
-    tags: List[str]
+    metrics: dict[str, Any]
+    config: dict[str, Any]
+    tags: list[str]
     timestamp: float = field(default_factory=time.time)
 
 
@@ -37,7 +37,7 @@ class WandBExporter:
         self._project = project
         self._client = client
         self._offline = client is None
-        self._runs: List[WandBRun] = []
+        self._runs: list[WandBRun] = []
 
     @property
     def is_offline(self) -> bool:
@@ -45,16 +45,16 @@ class WandBExporter:
         return self._offline
 
     @property
-    def runs(self) -> List[WandBRun]:
+    def runs(self) -> list[WandBRun]:
         """Get recorded runs."""
         return list(self._runs)
 
     def log_run(
         self,
         run_name: str,
-        metrics: Dict[str, Any],
-        config: Optional[Dict[str, Any]] = None,
-        tags: Optional[List[str]] = None,
+        metrics: dict[str, Any],
+        config: dict[str, Any] | None = None,
+        tags: list[str] | None = None,
     ) -> WandBRun:
         """Log a run with SRE metrics.
 
@@ -94,7 +94,7 @@ class WandBExporter:
             The created WandBRun.
         """
         status = slo.evaluate()
-        metrics: Dict[str, Any] = {
+        metrics: dict[str, Any] = {
             "slo_status": status.value,
             "budget_remaining": slo.error_budget.remaining,
             "burn_rate": slo.error_budget.burn_rate(),
@@ -116,7 +116,7 @@ class WandBExporter:
             tags=tags,
         )
 
-    def log_cost_series(self, agent_id: str, costs: List[float]) -> WandBRun:
+    def log_cost_series(self, agent_id: str, costs: list[float]) -> WandBRun:
         """Log cost trajectory as a W&B run.
 
         Args:
@@ -126,7 +126,7 @@ class WandBExporter:
         Returns:
             The created WandBRun.
         """
-        metrics: Dict[str, Any] = {
+        metrics: dict[str, Any] = {
             "total_cost": sum(costs),
             "num_steps": len(costs),
             "avg_cost": sum(costs) / len(costs) if costs else 0.0,
@@ -143,7 +143,7 @@ class WandBExporter:
         """Clear all recorded runs."""
         self._runs.clear()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get exporter statistics."""
         return {
             "project": self._project,

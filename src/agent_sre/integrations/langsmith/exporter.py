@@ -16,7 +16,7 @@ import logging
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -28,13 +28,13 @@ class RunRecord:
     run_id: str
     name: str
     run_type: str = "chain"
-    inputs: Optional[Dict[str, Any]] = None
-    outputs: Optional[Dict[str, Any]] = None
-    parent_run_id: Optional[str] = None
-    tags: List[str] = field(default_factory=list)
+    inputs: dict[str, Any] | None = None
+    outputs: dict[str, Any] | None = None
+    parent_run_id: str | None = None
+    tags: list[str] = field(default_factory=list)
     start_time: float = field(default_factory=time.time)
-    end_time: Optional[float] = None
-    error: Optional[str] = None
+    end_time: float | None = None
+    error: str | None = None
 
 
 @dataclass
@@ -77,8 +77,8 @@ class LangSmithExporter:
         self._offline = not bool(api_key)
         self.project_name = project_name
 
-        self._runs: List[RunRecord] = []
-        self._feedbacks: List[FeedbackRecord] = []
+        self._runs: list[RunRecord] = []
+        self._feedbacks: list[FeedbackRecord] = []
 
     @property
     def is_offline(self) -> bool:
@@ -86,12 +86,12 @@ class LangSmithExporter:
         return self._offline
 
     @property
-    def runs(self) -> List[RunRecord]:
+    def runs(self) -> list[RunRecord]:
         """Get recorded runs."""
         return list(self._runs)
 
     @property
-    def feedbacks(self) -> List[FeedbackRecord]:
+    def feedbacks(self) -> list[FeedbackRecord]:
         """Get recorded feedbacks."""
         return list(self._feedbacks)
 
@@ -99,9 +99,9 @@ class LangSmithExporter:
         self,
         name: str,
         run_type: str = "chain",
-        inputs: Dict[str, Any] | None = None,
+        inputs: dict[str, Any] | None = None,
         parent_run_id: str | None = None,
-        tags: List[str] | None = None,
+        tags: list[str] | None = None,
     ) -> RunRecord:
         """Start a new run.
 
@@ -133,7 +133,7 @@ class LangSmithExporter:
     def end_run(
         self,
         run_id: str,
-        outputs: Dict[str, Any] | None = None,
+        outputs: dict[str, Any] | None = None,
         error: str | None = None,
     ) -> RunRecord | None:
         """End a run.
@@ -193,7 +193,7 @@ class LangSmithExporter:
         self,
         slo: Any,
         run_id: str | None = None,
-    ) -> List[FeedbackRecord]:
+    ) -> list[FeedbackRecord]:
         """Export SLO evaluation as feedback on a run.
 
         Creates feedback records for:
@@ -217,7 +217,7 @@ class LangSmithExporter:
         status_code = SLO_STATUS_CODES.get(status.value, -1)
         burn = slo.error_budget.burn_rate()
 
-        feedbacks: List[FeedbackRecord] = []
+        feedbacks: list[FeedbackRecord] = []
 
         feedbacks.append(self.add_feedback(
             run_id=run_id,
@@ -258,7 +258,7 @@ class LangSmithExporter:
         import urllib.request
 
         url = "https://api.smith.langchain.com/api/v1/runs"
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "id": run.run_id,
             "name": run.name,
             "run_type": run.run_type,
@@ -292,7 +292,7 @@ class LangSmithExporter:
         import urllib.request
 
         url = f"https://api.smith.langchain.com/api/v1/runs/{run.run_id}"
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "end_time": run.end_time,
         }
         if run.outputs:
@@ -347,7 +347,7 @@ class LangSmithExporter:
         self._runs.clear()
         self._feedbacks.clear()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get statistics about recorded data."""
         return {
             "total_runs": len(self._runs),

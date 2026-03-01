@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class DatadogMetric:
 
     name: str
     value: float
-    tags: List[str]
+    tags: list[str]
     metric_type: str = "gauge"
     timestamp: float = field(default_factory=time.time)
 
@@ -36,7 +36,7 @@ class DatadogEvent:
     title: str
     text: str
     alert_type: str = "info"
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     timestamp: float = field(default_factory=time.time)
 
 
@@ -67,8 +67,8 @@ class DatadogExporter:
         self._site = site
         self._offline = not bool(api_key)
 
-        self._metrics: List[DatadogMetric] = []
-        self._events: List[DatadogEvent] = []
+        self._metrics: list[DatadogMetric] = []
+        self._events: list[DatadogEvent] = []
 
     @property
     def is_offline(self) -> bool:
@@ -76,12 +76,12 @@ class DatadogExporter:
         return self._offline
 
     @property
-    def metrics(self) -> List[DatadogMetric]:
+    def metrics(self) -> list[DatadogMetric]:
         """Get recorded metrics."""
         return list(self._metrics)
 
     @property
-    def events(self) -> List[DatadogEvent]:
+    def events(self) -> list[DatadogEvent]:
         """Get recorded events."""
         return list(self._events)
 
@@ -89,7 +89,7 @@ class DatadogExporter:
         self,
         metric_name: str,
         value: float,
-        tags: List[str] | None = None,
+        tags: list[str] | None = None,
         metric_type: str = "gauge",
     ) -> DatadogMetric:
         """Submit a Datadog metric.
@@ -121,7 +121,7 @@ class DatadogExporter:
         title: str,
         text: str,
         alert_type: str = "info",
-        tags: List[str] | None = None,
+        tags: list[str] | None = None,
     ) -> DatadogEvent:
         """Submit a Datadog event.
 
@@ -151,7 +151,7 @@ class DatadogExporter:
         self,
         slo: Any,
         agent_id: str = "",
-    ) -> List[DatadogMetric]:
+    ) -> list[DatadogMetric]:
         """Export SLO evaluation as Datadog metrics.
 
         Creates metrics for:
@@ -201,7 +201,7 @@ class DatadogExporter:
         agent_id: str,
         cost_usd: float,
         task_id: str = "",
-        tags: List[str] | None = None,
+        tags: list[str] | None = None,
     ) -> DatadogMetric:
         """Submit cost as a Datadog metric.
 
@@ -287,7 +287,7 @@ class DatadogExporter:
         self._metrics.clear()
         self._events.clear()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get statistics about recorded data."""
         return {
             "total_metrics": len(self._metrics),

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import time
-from unittest.mock import patch
 
 import pytest
 
@@ -13,7 +12,6 @@ from agent_sre.cascade import (
     CircuitBreakerConfig,
     CircuitOpenError,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

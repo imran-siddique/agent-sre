@@ -10,23 +10,22 @@ These tests verify that the major subsystems work together correctly:
 - Observability integrations → SLI values
 """
 
+import contextlib
 import time
-
-import pytest
 
 
 class TestSLOPipeline:
     """SLI recording → SLO evaluation → Error Budget → Dashboard."""
 
     def test_full_slo_lifecycle(self):
+        from agent_sre.slo.dashboard import SLODashboard
         from agent_sre.slo.indicators import (
             CostPerTask,
             ResponseLatency,
             TaskSuccessRate,
             ToolCallAccuracy,
         )
-        from agent_sre.slo.objectives import ErrorBudget, SLO, SLOStatus
-        from agent_sre.slo.dashboard import SLODashboard
+        from agent_sre.slo.objectives import SLO, ErrorBudget, SLOStatus
 
         success = TaskSuccessRate(target=0.95)
         accuracy = ToolCallAccuracy(target=0.99)
@@ -73,7 +72,7 @@ class TestSLOPipeline:
 
     def test_error_budget_exhaustion(self):
         from agent_sre.slo.indicators import TaskSuccessRate
-        from agent_sre.slo.objectives import ErrorBudget, ExhaustionAction, SLO, SLOStatus
+        from agent_sre.slo.objectives import SLO, ErrorBudget, ExhaustionAction, SLOStatus
 
         sli = TaskSuccessRate(target=0.99)
         budget = ErrorBudget(total=0.01, exhaustion_action=ExhaustionAction.CIRCUIT_BREAK)
@@ -89,9 +88,9 @@ class TestSLOPipeline:
         assert slo.evaluate() == SLOStatus.EXHAUSTED
 
     def test_multi_slo_dashboard(self):
+        from agent_sre.slo.dashboard import SLODashboard
         from agent_sre.slo.indicators import TaskSuccessRate
         from agent_sre.slo.objectives import SLO
-        from agent_sre.slo.dashboard import SLODashboard
 
         dashboard = SLODashboard()
 
@@ -144,7 +143,6 @@ class TestIncidentFlow:
 
     def test_incident_detection(self):
         from agent_sre.incidents.detector import (
-            Incident,
             IncidentDetector,
             Signal,
             SignalType,
@@ -165,7 +163,6 @@ class TestIncidentFlow:
 
     def test_postmortem_generation(self):
         from agent_sre.incidents.detector import (
-            Incident,
             IncidentDetector,
             Signal,
             SignalType,
@@ -187,10 +184,8 @@ class TestIncidentFlow:
         incidents = detector.open_incidents
         if incidents:
             # Community Edition: generate raises NotImplementedError
-            try:
-                pm = gen.generate(incidents[0])
-            except NotImplementedError:
-                pass  # Expected in Community Edition
+            with contextlib.suppress(NotImplementedError):
+                gen.generate(incidents[0])
         else:
             # Verify generator instantiation works
             assert gen is not None
@@ -209,9 +204,9 @@ class TestCostPipeline:
             detector.ingest(1.0, agent_id="test")
 
         # Add anomalous spike
-        result = detector.ingest(100.0, agent_id="test")
+        detector.ingest(100.0, agent_id="test")
         # Should detect anomaly (or at least return a result)
-        assert result is not None or True  # ingest may return None if not anomalous
+        assert True  # ingest may return None if not anomalous
 
     def test_cost_guard_budget_limit(self):
         from agent_sre.cost.guard import CostGuard
@@ -260,17 +255,15 @@ class TestDeliveryPipeline:
 
         assert rollout.state == RolloutState.PENDING
         # Community Edition: start raises NotImplementedError
-        try:
+        with contextlib.suppress(NotImplementedError):
             rollout.start()
-        except NotImplementedError:
-            pass  # Expected in Community Edition
 
 
 class TestEvalsSLIPipeline:
     """Evaluation engine → SLI feed → SLO tracking."""
 
     def test_evals_drive_slo(self):
-        from agent_sre.evals import EvalInput, EvaluationEngine, RulesJudge, Verdict
+        from agent_sre.evals import EvalInput, EvaluationEngine, RulesJudge
         from agent_sre.slo.indicators import HallucinationRate, TaskSuccessRate
         from agent_sre.slo.objectives import SLO
 
@@ -377,7 +370,7 @@ class TestReplayFlow:
     """Trace capture → Replay → Diff analysis."""
 
     def test_trace_capture_and_replay(self):
-        from agent_sre.replay.capture import Span, SpanKind, SpanStatus, Trace, TraceCapture
+        from agent_sre.replay.capture import Span, SpanKind, SpanStatus, TraceCapture
 
         capture = TraceCapture(agent_id="test-agent", task_input="run test")
 

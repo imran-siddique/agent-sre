@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import time
 
-import pytest
-
 from agent_sre.fleet import (
     AgentEvent,
     AgentHealth,
@@ -13,9 +11,7 @@ from agent_sre.fleet import (
     AgentState,
     FleetHealth,
     FleetManager,
-    FleetStatus,
 )
-
 
 # ---------------------------------------------------------------------------
 # AgentRegistration
@@ -269,7 +265,7 @@ class TestFleetHealth:
         fm = FleetManager(heartbeat_timeout=1.0)
         r1 = fm.register("a1", heartbeat_timeout=1.0)
         r2 = fm.register("a2", heartbeat_timeout=1.0)
-        r3 = fm.register("a3", heartbeat_timeout=1.0)
+        fm.register("a3", heartbeat_timeout=1.0)
         r1.last_heartbeat = time.time() - 2.0
         r2.last_heartbeat = time.time() - 2.0
         status = fm.status()

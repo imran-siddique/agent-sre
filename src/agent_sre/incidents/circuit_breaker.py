@@ -56,11 +56,11 @@ class CircuitEvent:
 
 class CircuitBreaker:
     """Circuit breaker for automatic agent isolation on failure.
-    
+
     States:
     - CLOSED: Normal operation. Track failures.
     - OPEN: Agent isolated. Reject all calls. Use force_close() or reset() to recover.
-    
+
     Half-open recovery is not available in Community Edition.
     """
 
@@ -120,7 +120,7 @@ class CircuitBreaker:
         old_state = self._state
         if old_state == new_state:
             return
-        
+
         self._events.append(CircuitEvent(
             from_state=old_state,
             to_state=new_state,

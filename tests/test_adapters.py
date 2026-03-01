@@ -4,8 +4,9 @@ Tests for Framework Adapters.
 Covers: LangGraphAdapter, CrewAIAdapter, AutoGenAdapter, OpenAIAgentsAdapter.
 """
 
-import pytest
 import time
+
+import pytest
 
 from agent_sre.adapters import (
     AutoGenAdapter,
@@ -72,7 +73,7 @@ class TestLangGraphAdapter:
 
     def test_multiple_runs(self):
         a = LangGraphAdapter()
-        for i in range(5):
+        for _i in range(5):
             a.on_graph_start()
             a.on_llm_call(cost_usd=0.01)
             a.on_graph_end(success=True)
@@ -215,7 +216,7 @@ class TestBaseAdapter:
 class TestAdapterSLIIntegration:
     def test_adapter_feeds_slo(self):
         """Demonstrate adapter SLI snapshot feeding into SLO engine."""
-        from agent_sre.slo.indicators import TaskSuccessRate, CostPerTask
+        from agent_sre.slo.indicators import CostPerTask, TaskSuccessRate
         from agent_sre.slo.objectives import SLO
 
         adapter = LangGraphAdapter()
@@ -227,7 +228,7 @@ class TestAdapterSLIIntegration:
             adapter.on_graph_end(success=(i < 9))  # 90% success
 
         # Feed into SLI
-        snap = adapter.get_sli_snapshot()
+        adapter.get_sli_snapshot()
         success_sli = TaskSuccessRate(target=0.95)
         cost_sli = CostPerTask(target_usd=0.10)
 
@@ -235,7 +236,7 @@ class TestAdapterSLIIntegration:
             success_sli.record_task(success=task.success)
             cost_sli.record_cost(cost_usd=task.cost_usd)
 
-        slo = SLO(
+        SLO(
             name="langgraph-agent",
             indicators=[success_sli, cost_sli],
         )

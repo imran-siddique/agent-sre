@@ -1,13 +1,12 @@
 """Tests for SLO compliance dashboard."""
 
 from agent_sre.slo.dashboard import (
-    ComplianceRecord,
     ReportPeriod,
     SLODashboard,
     SLOSnapshot,
 )
 from agent_sre.slo.indicators import TaskSuccessRate
-from agent_sre.slo.objectives import SLO, ErrorBudget, SLOStatus
+from agent_sre.slo.objectives import SLO, SLOStatus
 
 
 class TestSLODashboard:

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from importlib.metadata import entry_points
-from typing import Any, Dict, Optional, Type
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +21,10 @@ PROVIDER_GROUPS = {
     "incident": "agent_sre.providers.incident",
 }
 
-_provider_cache: Dict[str, Any] = {}
+_provider_cache: dict[str, Any] = {}
 
 
-def _discover_provider(group: str) -> Optional[Type]:
+def _discover_provider(group: str) -> type | None:
     """Discover an advanced provider via entry_points."""
     if group in _provider_cache:
         return _provider_cache[group]
@@ -100,7 +100,7 @@ def get_cost_optimizer(**kwargs: Any):
     return CostOptimizer(**kwargs)
 
 
-def list_providers() -> Dict[str, str]:
+def list_providers() -> dict[str, str]:
     """List all provider slots and their current implementations."""
     result = {}
     for name, group in PROVIDER_GROUPS.items():

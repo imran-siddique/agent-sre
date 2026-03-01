@@ -6,12 +6,15 @@ Cron-based scheduling is not available. Use manual triggering instead.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
-from agent_sre.chaos.scheduler import (
-    ChaosSchedule,
-    ScheduleExecution,
-)
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from agent_sre.chaos.scheduler import (
+        ChaosSchedule,
+        ScheduleExecution,
+    )
 
 
 class ChaosScheduler:

@@ -18,16 +18,16 @@ import logging
 from typing import Any
 
 from opentelemetry import trace
-from opentelemetry.trace import StatusCode, Tracer, SpanKind as OtelSpanKind
+from opentelemetry.trace import SpanKind as OtelSpanKind
+from opentelemetry.trace import StatusCode, Tracer
 
 from agent_sre.integrations.otel.conventions import (
     AGENT_ID,
-    AGENT_NAME,
-    COST_USD,
     SPAN_COST_USD,
     SPAN_KIND_AGENT,
 )
-from agent_sre.replay.capture import Span as SreSpan, SpanKind, SpanStatus, Trace
+from agent_sre.replay.capture import Span as SreSpan
+from agent_sre.replay.capture import SpanKind, SpanStatus, Trace
 
 logger = logging.getLogger(__name__)
 

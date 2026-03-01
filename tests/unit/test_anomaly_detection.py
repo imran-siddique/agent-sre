@@ -15,7 +15,6 @@ from agent_sre.anomaly.strategies import (
     StatisticalStrategy,
 )
 
-
 # ── DetectorConfig ──────────────────────────────────────────────────
 
 class TestDetectorConfig:
@@ -224,7 +223,7 @@ class TestAnomalyDetector:
 
     def test_min_samples_respected(self) -> None:
         det = AnomalyDetector(DetectorConfig(min_samples=20))
-        for i in range(15):
+        for _i in range(15):
             alert = det.ingest("latency", 10.0)
         # Not enough samples yet — even a spike should not alert
         alert = det.ingest("latency", 999.0)
@@ -236,7 +235,7 @@ class TestAnomalyDetector:
             det.record_tool_call("agent-1", "search")
             det.record_tool_call("agent-1", "read")
         # Known pattern: search → read.  Now introduce novel transition.
-        alert = det.record_tool_call("agent-1", "delete")
+        det.record_tool_call("agent-1", "delete")
         # May or may not trigger depending on min_pattern_frequency, but
         # sequence buffer should be populated.
         buf = det._sequence_buffer.get("agent-1")

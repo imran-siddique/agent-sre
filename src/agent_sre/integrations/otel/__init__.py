@@ -16,9 +16,9 @@ Works with any OTLP-compatible backend (Grafana, Jaeger, Prometheus,
 Langfuse, Arize, Datadog, etc.).
 """
 
+from agent_sre.integrations.otel.events import EventLogger
 from agent_sre.integrations.otel.metrics import MetricsExporter
 from agent_sre.integrations.otel.traces import TraceExporter
-from agent_sre.integrations.otel.events import EventLogger
 
 __all__ = [
     "MetricsExporter",

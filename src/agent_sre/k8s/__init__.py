@@ -45,7 +45,6 @@ from agent_sre.delivery.rollout import (
     RolloutStep,
 )
 
-
 # ---------------------------------------------------------------------------
 # CRD schema
 # ---------------------------------------------------------------------------
@@ -56,7 +55,7 @@ CRD_KIND = "AgentRollout"
 CRD_PLURAL = "agentrollouts"
 
 
-def generate_crd_manifest() -> Dict[str, Any]:
+def generate_crd_manifest() -> dict[str, Any]:
     """Generate the AgentRollout CustomResourceDefinition manifest.
 
     Returns a dict suitable for serialisation to YAML and ``kubectl apply``.
@@ -97,7 +96,7 @@ def generate_crd_manifest() -> Dict[str, Any]:
     }
 
 
-def _openapi_schema() -> Dict[str, Any]:
+def _openapi_schema() -> dict[str, Any]:
     """OpenAPI v3 schema for AgentRollout CRD."""
     return {
         "type": "object",
@@ -221,7 +220,7 @@ class Condition:
     message: str = ""
     last_transition_time: float = field(default_factory=time.time)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "type": self.type.value,
             "status": self.status.value,
@@ -238,7 +237,7 @@ class ResourceStatus:
     phase: str = "Pending"
     current_step: int = 0
     current_weight: float = 0.0
-    conditions: List[Condition] = field(default_factory=list)
+    conditions: list[Condition] = field(default_factory=list)
     observed_generation: int = 0
     message: str = ""
 
@@ -262,7 +261,7 @@ class ResourceStatus:
                 return c
         return None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "phase": self.phase,
             "currentStep": self.current_step,
@@ -298,7 +297,7 @@ class ReconcileResult:
     status: ResourceStatus
     message: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "action": self.action.value,
             "name": self.name,
@@ -312,7 +311,7 @@ class ReconcileResult:
 # Reconciler
 # ---------------------------------------------------------------------------
 
-def _parse_spec(spec_dict: Dict[str, Any]) -> RolloutSpec:
+def _parse_spec(spec_dict: dict[str, Any]) -> RolloutSpec:
     """Parse a CRD spec dict into a RolloutSpec."""
     strategy_str = spec_dict.get("strategy", "canary")
     strategy = DeploymentStrategy(strategy_str)
@@ -378,10 +377,10 @@ class Reconciler:
     """
 
     def __init__(self) -> None:
-        self._rollouts: Dict[str, CanaryRollout] = {}  # key = "namespace/name"
-        self._statuses: Dict[str, ResourceStatus] = {}
-        self._specs: Dict[str, RolloutSpec] = {}
-        self._generations: Dict[str, int] = {}
+        self._rollouts: dict[str, CanaryRollout] = {}  # key = "namespace/name"
+        self._statuses: dict[str, ResourceStatus] = {}
+        self._specs: dict[str, RolloutSpec] = {}
+        self._generations: dict[str, int] = {}
 
     def _key(self, name: str, namespace: str) -> str:
         return f"{namespace}/{name}"
@@ -392,7 +391,7 @@ class Reconciler:
         self,
         name: str,
         namespace: str,
-        spec_dict: Dict[str, Any],
+        spec_dict: dict[str, Any],
         generation: int = 1,
     ) -> ReconcileResult:
         """Reconcile a CRD spec — create, advance, or rollback as needed."""
@@ -602,7 +601,7 @@ class Reconciler:
     def get_rollout(self, name: str, namespace: str) -> CanaryRollout | None:
         return self._rollouts.get(self._key(name, namespace))
 
-    def list_rollouts(self, namespace: str | None = None) -> List[Dict[str, Any]]:
+    def list_rollouts(self, namespace: str | None = None) -> list[dict[str, Any]]:
         """List all managed rollouts."""
         results = []
         for key, status in self._statuses.items():
@@ -621,7 +620,7 @@ class Reconciler:
     def active_count(self) -> int:
         """Number of active (non-terminal) rollouts."""
         count = 0
-        for key, rollout in self._rollouts.items():
+        for _key, rollout in self._rollouts.items():
             if rollout.state not in (RolloutState.COMPLETE, RolloutState.ROLLED_BACK):
                 count += 1
         return count

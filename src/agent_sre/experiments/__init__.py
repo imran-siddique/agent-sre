@@ -42,7 +42,7 @@ class Variant:
     name: str
     description: str = ""
     weight: float = 0.5
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -74,7 +74,7 @@ class MetricSummary:
     significance: SignificanceLevel = SignificanceLevel.NOT_SIGNIFICANT
     winner: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "metric": self.metric_name,
             "variant_a": {"name": self.variant_a, "mean": round(self.mean_a, 4), "n": self.n_a},
@@ -106,8 +106,8 @@ class Experiment:
     def __init__(
         self,
         name: str,
-        variants: Optional[List[Variant]] = None,
-        metrics: Optional[List[str]] = None,
+        variants: list[Variant] | None = None,
+        metrics: list[str] | None = None,
         min_samples: int = 30,
         description: str = "",
     ) -> None:
@@ -117,8 +117,8 @@ class Experiment:
         self.metrics = metrics or ["task_success_rate"]
         self.min_samples = min_samples
         self.status = ExperimentStatus.DRAFT
-        self._samples: List[MetricSample] = []
-        self._assignments: Dict[str, int] = {v.name: 0 for v in self.variants}
+        self._samples: list[MetricSample] = []
+        self._assignments: dict[str, int] = {v.name: 0 for v in self.variants}
         self._started_at: float = 0.0
         self._ended_at: float = 0.0
 
@@ -155,13 +155,13 @@ class Experiment:
             variant_name=variant_name, metric_name=metric_name, value=value,
         ))
 
-    def _get_values(self, variant_name: str, metric_name: str) -> List[float]:
+    def _get_values(self, variant_name: str, metric_name: str) -> list[float]:
         return [
             s.value for s in self._samples
             if s.variant_name == variant_name and s.metric_name == metric_name
         ]
 
-    def analyze(self) -> List[MetricSummary]:
+    def analyze(self) -> list[MetricSummary]:
         if len(self.variants) < 2:
             return []
 
@@ -187,7 +187,7 @@ class Experiment:
     def sample_count(self) -> int:
         return len(self._samples)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "status": self.status.value,
@@ -198,7 +198,7 @@ class Experiment:
         }
 
 
-def _std(values: List[float]) -> float:
+def _std(values: list[float]) -> float:
     if len(values) < 2:
         return 0.0
     n = len(values)
@@ -220,7 +220,7 @@ def _welch_p_value(m1: float, m2: float, s1: float, s2: float, n1: int, n2: int)
 
 def _compare(
     metric: str, name_a: str, name_b: str,
-    values_a: List[float], values_b: List[float],
+    values_a: list[float], values_b: list[float],
 ) -> MetricSummary:
     n_a, n_b = len(values_a), len(values_b)
     mean_a = sum(values_a) / n_a if n_a else 0.0

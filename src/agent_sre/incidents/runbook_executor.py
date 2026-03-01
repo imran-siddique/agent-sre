@@ -22,7 +22,6 @@ from agent_sre.incidents.runbook import (
     RunbookExecution,
     RunbookStep,
     StepResult,
-    StepStatus,
 )
 
 logger = logging.getLogger(__name__)

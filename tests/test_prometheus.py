@@ -1,6 +1,5 @@
 """Tests for Prometheus exporter."""
 
-import pytest
 
 from agent_sre.integrations.prometheus import PrometheusExporter
 from agent_sre.slo.indicators import TaskSuccessRate

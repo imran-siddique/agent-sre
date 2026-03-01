@@ -9,10 +9,11 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from agent_sre.replay.capture import Span, SpanKind, Trace
-from agent_sre.replay.engine import ReplayResult, TraceDiff, DiffType
+if TYPE_CHECKING:
+    from agent_sre.replay.capture import Trace
+    from agent_sre.replay.engine import ReplayResult, TraceDiff
 
 
 class MeshReplayState(Enum):

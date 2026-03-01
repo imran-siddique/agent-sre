@@ -6,20 +6,16 @@ import pytest
 
 from agent_sre.k8s import (
     CRD_GROUP,
-    CRD_KIND,
     CRD_PLURAL,
     CRD_VERSION,
     Condition,
     ConditionStatus,
     ConditionType,
     ReconcileAction,
-    ReconcileResult,
     Reconciler,
     ResourceStatus,
     generate_crd_manifest,
 )
-from agent_sre.delivery.rollout import RolloutState
-
 
 # ---------------------------------------------------------------------------
 # CRD manifest

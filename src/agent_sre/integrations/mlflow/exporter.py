@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +19,9 @@ class MLflowRun:
     """An MLflow run record."""
 
     name: str
-    metrics: Dict[str, Any]
-    params: Dict[str, Any]
-    tags: Dict[str, str]
+    metrics: dict[str, Any]
+    params: dict[str, Any]
+    tags: dict[str, str]
     timestamp: float = field(default_factory=time.time)
 
 
@@ -47,8 +47,8 @@ class MLflowExporter:
         self._experiment_name = experiment_name
         self._client = client
         self._offline = client is None
-        self._runs: List[MLflowRun] = []
-        self._artifacts: List[MLflowArtifact] = []
+        self._runs: list[MLflowRun] = []
+        self._artifacts: list[MLflowArtifact] = []
 
     @property
     def is_offline(self) -> bool:
@@ -56,21 +56,21 @@ class MLflowExporter:
         return self._offline
 
     @property
-    def runs(self) -> List[MLflowRun]:
+    def runs(self) -> list[MLflowRun]:
         """Get recorded runs."""
         return list(self._runs)
 
     @property
-    def artifacts(self) -> List[MLflowArtifact]:
+    def artifacts(self) -> list[MLflowArtifact]:
         """Get recorded artifacts."""
         return list(self._artifacts)
 
     def log_run(
         self,
         run_name: str,
-        metrics: Dict[str, Any],
-        params: Optional[Dict[str, Any]] = None,
-        tags: Optional[Dict[str, str]] = None,
+        metrics: dict[str, Any],
+        params: dict[str, Any] | None = None,
+        tags: dict[str, str] | None = None,
     ) -> MLflowRun:
         """Log a run with SRE metrics.
 
@@ -110,7 +110,7 @@ class MLflowExporter:
             The created MLflowRun.
         """
         status = slo.evaluate()
-        metrics: Dict[str, Any] = {
+        metrics: dict[str, Any] = {
             "slo_status": status.value,
             "budget_remaining": slo.error_budget.remaining,
             "burn_rate": slo.error_budget.burn_rate(),
@@ -161,7 +161,7 @@ class MLflowExporter:
         self._runs.clear()
         self._artifacts.clear()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get exporter statistics."""
         return {
             "experiment_name": self._experiment_name,

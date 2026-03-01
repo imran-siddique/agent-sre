@@ -5,7 +5,6 @@ Covers: Alert, AlertManager, ChannelConfig, formatters, delivery.
 Uses CALLBACK channels for zero-network testing.
 """
 
-import pytest
 
 from agent_sre.alerts import (
     Alert,
@@ -13,14 +12,12 @@ from agent_sre.alerts import (
     AlertManager,
     AlertSeverity,
     ChannelConfig,
-    DeliveryResult,
     format_generic,
     format_opsgenie,
     format_pagerduty,
     format_slack,
     format_teams,
 )
-
 
 # =============================================================================
 # Alert

@@ -1,24 +1,21 @@
 """Tests for adversarial chaos engineering — red-team experiments."""
 
-import pytest
 
-from agent_sre.chaos.engine import (
-    AbortCondition,
-    ChaosExperiment,
-    Fault,
-    FaultType,
-)
 from agent_sre.chaos.adversarial import (
+    BUILTIN_PLAYBOOKS,
     AdversarialPlaybook,
     AdversarialRunner,
     AttackResult,
     AttackTechnique,
-    BUILTIN_PLAYBOOKS,
     PlaybookResult,
     PlaybookStep,
 )
-from agent_sre.chaos.library import ChaosLibrary, ExperimentTemplate
-
+from agent_sre.chaos.engine import (
+    ChaosExperiment,
+    Fault,
+    FaultType,
+)
+from agent_sre.chaos.library import ChaosLibrary
 
 # ---------------------------------------------------------------------------
 # FaultType enum — new adversarial values

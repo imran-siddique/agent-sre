@@ -44,10 +44,12 @@ import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, Generator, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from agent_sre.replay.capture import Span, SpanKind, SpanStatus, Trace, TraceCapture
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 # ---------------------------------------------------------------------------
 # Protocol types
@@ -88,7 +90,7 @@ class TraceContext:
     span_id: str = field(default_factory=lambda: uuid.uuid4().hex[:16])
     parent_span_id: str | None = None
     sampled: bool = True
-    baggage: Dict[str, str] = field(default_factory=dict)
+    baggage: dict[str, str] = field(default_factory=dict)
 
     def to_traceparent(self) -> str:
         """Serialise as W3C traceparent header value."""
@@ -115,7 +117,7 @@ class TraceContext:
             baggage=dict(self.baggage),
         )
 
-    def to_headers(self) -> Dict[str, str]:
+    def to_headers(self) -> dict[str, str]:
         """Export as HTTP headers for injection."""
         headers = {"traceparent": self.to_traceparent()}
         if self.baggage:
@@ -124,7 +126,7 @@ class TraceContext:
         return headers
 
     @classmethod
-    def from_headers(cls, headers: Dict[str, str]) -> TraceContext:
+    def from_headers(cls, headers: dict[str, str]) -> TraceContext:
         """Extract trace context from HTTP headers."""
         ctx = cls.from_traceparent(headers.get("traceparent", ""))
         baggage_str = headers.get("baggage", "")
@@ -151,9 +153,9 @@ class SpanLink:
     trace_id: str
     span_id: str
     relationship: str = "follows_from"  # follows_from | caused_by | related_to
-    attributes: Dict[str, str] = field(default_factory=dict)
+    attributes: dict[str, str] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "trace_id": self.trace_id,
             "span_id": self.span_id,
@@ -178,7 +180,7 @@ class ProtocolSpan:
     protocol: ProtocolType = ProtocolType.INTERNAL
     role: SpanRole = SpanRole.CLIENT
     context: TraceContext | None = None
-    links: List[SpanLink] = field(default_factory=list)
+    links: list[SpanLink] = field(default_factory=list)
 
     # Protocol-specific metadata
     remote_agent_id: str = ""
@@ -204,7 +206,7 @@ class ProtocolSpan:
 
     def set_response(self, response: Any, cost_usd: float = 0.0) -> None:
         """Record a protocol response and finish the span."""
-        output: Dict[str, Any] = {}
+        output: dict[str, Any] = {}
         if isinstance(response, dict):
             output = response
         elif response is not None:
@@ -223,7 +225,7 @@ class ProtocolSpan:
             relationship=relationship,
         ))
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = self.span.to_dict()
         d.update({
             "protocol": self.protocol.value,
@@ -262,7 +264,7 @@ class ProtocolTimelineEntry:
     label: str
     duration_ms: float | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "timestamp": self.timestamp,
             "agent_id": self.agent_id,
@@ -285,8 +287,8 @@ class TracingReport:
 
     agent_id: str
     trace_id: str
-    protocol_spans: List[ProtocolSpan] = field(default_factory=list)
-    timeline: List[ProtocolTimelineEntry] = field(default_factory=list)
+    protocol_spans: list[ProtocolSpan] = field(default_factory=list)
+    timeline: list[ProtocolTimelineEntry] = field(default_factory=list)
     start_time: float = 0.0
     end_time: float = 0.0
 
@@ -312,15 +314,15 @@ class TracingReport:
             return None
         return (self.end_time - self.start_time) * 1000
 
-    def protocol_breakdown(self) -> Dict[str, int]:
+    def protocol_breakdown(self) -> dict[str, int]:
         """Count of spans per protocol type."""
-        counts: Dict[str, int] = {}
+        counts: dict[str, int] = {}
         for s in self.protocol_spans:
             key = s.protocol.value
             counts[key] = counts.get(key, 0) + 1
         return counts
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "agent_id": self.agent_id,
             "trace_id": self.trace_id,
@@ -371,7 +373,7 @@ class ProtocolTracer:
             trace_id=self._context.trace_id,
             agent_id=agent_id,
         )
-        self._protocol_spans: List[ProtocolSpan] = []
+        self._protocol_spans: list[ProtocolSpan] = []
         self._start_time = time.time()
 
     @property
@@ -452,7 +454,7 @@ class ProtocolTracer:
         self,
         server_id: str,
         tool: str = "",
-        params: Dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
         request_id: str = "",
     ) -> Generator[ProtocolSpan, None, None]:
         """Trace an outgoing MCP tool call.
@@ -549,7 +551,7 @@ class ProtocolTracer:
     # Context propagation
     # -----------------------------------------------------------------------
 
-    def inject(self, pspan: ProtocolSpan) -> Dict[str, str]:
+    def inject(self, pspan: ProtocolSpan) -> dict[str, str]:
         """Produce propagation headers for an outgoing call.
 
         Returns a dict suitable for merging into HTTP headers / A2A metadata.
@@ -558,7 +560,7 @@ class ProtocolTracer:
             pspan.context = self._context.child()
         return pspan.context.to_headers()
 
-    def extract(self, headers: Dict[str, str]) -> TraceContext:
+    def extract(self, headers: dict[str, str]) -> TraceContext:
         """Extract a TraceContext from incoming headers.
 
         Use on the *server* side to correlate incoming spans with the
@@ -573,7 +575,7 @@ class ProtocolTracer:
     def receive_a2a(
         self,
         caller_agent: str,
-        headers: Dict[str, str],
+        headers: dict[str, str],
         task: str = "",
     ) -> ProtocolSpan:
         """Create a server-side span for an incoming A2A request.
@@ -616,7 +618,7 @@ class ProtocolTracer:
     def receive_mcp(
         self,
         caller_id: str,
-        headers: Dict[str, str],
+        headers: dict[str, str],
         tool: str = "",
     ) -> ProtocolSpan:
         """Create a server-side span for an incoming MCP request."""
@@ -655,9 +657,9 @@ class ProtocolTracer:
     # Timeline & reporting
     # -----------------------------------------------------------------------
 
-    def _build_timeline(self) -> List[ProtocolTimelineEntry]:
+    def _build_timeline(self) -> list[ProtocolTimelineEntry]:
         """Build a chronological timeline from protocol spans."""
-        entries: List[ProtocolTimelineEntry] = []
+        entries: list[ProtocolTimelineEntry] = []
         for ps in self._protocol_spans:
             direction = "send" if ps.role in (SpanRole.CLIENT, SpanRole.PRODUCER) else "receive"
             entries.append(ProtocolTimelineEntry(
@@ -692,7 +694,7 @@ class ProtocolTracer:
         return self._trace
 
     @property
-    def protocol_spans(self) -> List[ProtocolSpan]:
+    def protocol_spans(self) -> list[ProtocolSpan]:
         """All protocol spans recorded so far."""
         return list(self._protocol_spans)
 

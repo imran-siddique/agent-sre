@@ -6,10 +6,7 @@ headers and events are correctly generated.
 
 from __future__ import annotations
 
-import pytest
-
 from agent_sre.integrations.helicone import HeliconeHeaders, HeliconeLogger
-
 
 # ========== HeliconeHeaders Tests ==========
 

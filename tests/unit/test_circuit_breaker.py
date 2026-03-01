@@ -1,6 +1,7 @@
 """Tests for circuit breaker."""
 
 import time
+
 from agent_sre.incidents.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,

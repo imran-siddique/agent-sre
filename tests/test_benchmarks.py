@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import time
 
-import pytest
-
 from agent_sre.benchmarks import (
     BenchmarkCategory,
     BenchmarkReport,
@@ -15,7 +13,6 @@ from agent_sre.benchmarks import (
     ScenarioResult,
     ScenarioRun,
 )
-
 
 # ---------------------------------------------------------------------------
 # Mock agents

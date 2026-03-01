@@ -4,11 +4,12 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
 
-from agent_sre.slo.spec import SLOSpec
+if TYPE_CHECKING:
+    from agent_sre.slo.spec import SLOSpec
 
 
 class ValidationError(BaseModel):

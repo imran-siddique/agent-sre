@@ -3,7 +3,6 @@
 import pytest
 
 from agent_sre.delivery.blue_green import (
-    AgentEnvironment,
     BlueGreenConfig,
     BlueGreenManager,
     Environment,
