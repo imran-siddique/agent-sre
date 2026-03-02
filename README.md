@@ -14,7 +14,7 @@
 [![PyPI](https://img.shields.io/pypi/v/agent-sre)](https://pypi.org/project/agent-sre/)
 [![Downloads](https://img.shields.io/pypi/dm/agent-sre)](https://pypi.org/project/agent-sre/)
 [![Downloads](https://static.pepy.tech/badge/agent-sre)](https://pepy.tech/project/agent-sre)
-[![OWASP](https://img.shields.io/badge/OWASP_ASI08-Cascading_Failures-brightgreen)](https://github.com/imran-siddique/agent-os/blob/master/docs/owasp-agentic-top10-mapping.md)
+[![OWASP](https://img.shields.io/badge/OWASP_Agentic_Top_10-ASI--08-brightgreen)](https://github.com/imran-siddique/agent-governance/blob/master/docs/OWASP-COMPLIANCE.md)
 [![Agent-OS Compatible](https://img.shields.io/badge/agent--os-compatible-green.svg)](https://github.com/imran-siddique/agent-os)
 [![AgentMesh Compatible](https://img.shields.io/badge/agentmesh-compatible-green.svg)](https://github.com/imran-siddique/agent-mesh)
 [![Part of Agent Governance Ecosystem](https://img.shields.io/badge/ecosystem-Agent_Governance-blueviolet)](https://github.com/imran-siddique/agent-governance)
