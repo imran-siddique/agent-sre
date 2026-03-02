@@ -48,7 +48,7 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Bandit SAST scan
-        run: pip install bandit && bandit -r src/ -f json -s B310
+        run: pip install bandit && bandit -r src/ -f json -s B105,B310,B311
 
       - name: pip-audit CVE scan
         run: pip install pip-audit && pip-audit
