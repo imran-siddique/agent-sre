@@ -1,8 +1,9 @@
-"""Integrations with Agent OS, Agent Mesh, and OpenTelemetry."""
+"""Integrations with Agent OS, Agent Mesh, OpenTelemetry, and OpenLit."""
 
 __all__ = [
     "langchain",
     "otel",
+    "openlit",
     "agentops",
     "arize",
     "braintrust",
